@@ -1,0 +1,164 @@
+server
+fastapi0.110.0
+The web server that runs your ML service. Node.js sends it a transaction, it runs the ML model, it sends back a fraud score. Think of it as Express.js — but in Python.
+In your app: POST /fraud/score, POST /anomaly/check, GET /health
+
+server
+uvicorn0.29.0
+The engine that actually runs FastAPI. FastAPI is the framework, uvicorn is the runner — like how Express needs Node to run. You never call it directly, it just powers everything.
+In your app: python main.py → uvicorn starts listening on port 8000
+
+server
+python-multipart0.0.9
+Lets FastAPI accept file uploads — specifically photos sent from the browser. Without this, your bill splitter feature cannot receive the receipt image from React.
+In your app: user uploads receipt photo → FastAPI reads it → passes to OCR
+
+
+ML models — the actual brain of your app
+ML model
+scikit-learn1.4.1
+The Swiss army knife of ML. Has Random Forest (used in your fraud model), train/test split, accuracy scoring. The most beginner-friendly ML library — most tutorials use this.
+In your app: RandomForestClassifier for fraud detection, SMOTE helper
+
+ML model
+xgboost2.0.3
+A very powerful, fast ML algorithm. Wins most Kaggle competitions. Better than Random Forest for fraud detection because it handles imbalanced data (only 3.5% of transactions are fraud) well.
+In your app: fraud detection model, loan default risk model
+
+ML model
+lightgbm4.2.0
+Similar to XGBoost but faster and uses less memory. Works great with SHAP for explaining WHY a score was given ("your utilization is 85%, that's hurting your score").
+In your app: credit score simulator — shows which factors affect the score
+
+ML model
+tensorflow2.15.0
+Google's deep learning library. Used for neural networks — more complex than XGBoost but needed for patterns that change over time (like your spending habits month by month).
+In your app: LSTM for expense prediction, Autoencoder for anomaly detection
+
+ML model
+imbalanced-learn0.12.0
+Solves a real problem: in your fraud data, only 3.5% of rows are actual fraud. If you train on that, the model just says "not fraud" every time and is 96.5% accurate — but useless. This library fakes extra fraud examples so the model actually learns.
+In your app: SMOTE — generates synthetic fraud transactions for training
+
+ML model
+shap0.44.1
+SHAP = SHapley Additive exPlanations. Makes black-box ML models explainable. Instead of just saying "credit score: 620", it tells you exactly which factors helped or hurt the score and by how much.
+In your app: credit simulator shows { utilization: -30pts, payment_history: +15pts }
+
+
+
+Data tools — read, clean, and process data
+data
+pandas2.2.1
+Python's version of Excel, but in code. Reads CSV files, cleans missing values, filters rows, groups by category. You need this just to open the Kaggle training data files.
+In your app: df = pd.read_csv("ieee_fraud.csv") → df.fillna(0) → ready to train
+
+data
+numpy1.26.4
+Fast number crunching. Every ML library internally uses numpy arrays (like lists, but 100x faster for math). You rarely call numpy directly — it's more of a foundation everything else depends on.
+In your app: fraud_model.predict_proba() returns a numpy array → you read [0][1]
+
+utility
+joblib1.3.2
+Saves and loads your trained ML models to disk. After training (which takes minutes), you save the result as a .pkl file. Next time the server starts, it just loads that file — no retraining needed.
+In your app: joblib.dump(model, "fraud_model.pkl") → joblib.load("fraud_model.pkl")
+
+
+Q1: "Why is the ML service a separate application (FastAPI)? Why didn't you just write the ML logic in Node.js?"
+Your Answer: "Node.js is single-threaded and built for asynchronous I/O (like reading from a database). Machine Learning requires heavy CPU mathematical calculations. If I ran the ML model directly inside Node.js, it would block the event loop, and no other users would be able to make transactions until the math finished. By splitting it into a Python microservice, Node.js remains blazing fast, and Python (which has the best ML libraries like Scikit-Learn/TensorFlow) handles the heavy lifting."
+
+Q3: "In your catch block, you return a 'LOW' risk level if the ML server is down. Is that safe? What is the trade-off here?"
+Your Answer: "This is a concept called Fail-Open vs. Fail-Closed.
+
+Fail-Closed means if the security check fails, we block the transaction. This is highly secure, but if the ML server goes down, the entire bank goes down. No one can send money.
+Fail-Open (what I did) means if the security check fails, we assume the transaction is safe and let it through. I chose Fail-Open to prioritize system availability and User Experience (UX) so that a secondary service going down doesn't bring down the primary banking functionality. In a real-world scenario, we might log these 'skipped' transactions to a queue for asynchronous review later."
+
+
+
+
+
+
+
+
+
+Here is exactly what those specific lines are doing to fix that:
+
+1. sm = SMOTE(random_state=42)
+This initializes the SMOTE (Synthetic Minority Over-sampling Technique) algorithm.
+
+What is SMOTE? Instead of just copying the rare "fraud" rows over and over to balance the dataset (which can cause the model to memorize exact rows), SMOTE creates brand new, synthetic (fake but realistic) data points. It does this by taking two similar fraud cases and mathematically creating a new point that lies directly between them.
+random_state=42: This just ensures that the random math used to generate these synthetic points produces the exact same results every time you run the script.
+2. X_train_res, y_train_res = sm.fit_resample(X_train, y_train)
+This is the line that actually runs the SMOTE algorithm and does the heavy lifting.
+
+fit_resample(...): This function looks at your training inputs (X_train) and their answers (y_train). It notices that there are very few 1s (Fraud) and a lot of 0s (Not Fraud). It then generates synthetic 1s until the number of 1s perfectly matches the number of 0s.
+X_train_res, y_train_res: These are your new, resampled (balanced) datasets. From this point on in your script, you use these variables to train your model instead of the original X_train and y_train.
+Why ONLY on the training data?
+Notice the comment (apply SMOTE ONLY to the training data). This is a critical rule in Machine Learning.
+
+You use the fake/synthetic data to teach the model so it has enough examples of fraud to learn what fraud looks like.
+However, you must test the model on the X_test and y_test data (which remains untouched and highly imbalanced). Why? Because the test data needs to perfectly represent the real world. If you test your model on fake data, you won't actually know how well it performs on real-world, highly imbalanced banking traffic.
+
+
+
+
+
+
+
+
+
+
+This is a very common point of confusion when starting with machine learning! To understand X_train, X_test, y_train, and y_test, it helps to think of the machine learning model as a student taking an exam.
+
+Here is the secret decoder ring:
+
+X represents the Questions (the transaction details like amount, hour_of_day, account_age_days).
+y represents the Answers (Is it fraud or not? 1 or 0).
+train is the Study Guide / Practice test.
+test is the Final Exam.
+The 4 Variables Explained
+X_train (Practice Questions): We give these 80% of the transactions to the model so it can look for patterns.
+y_train (Practice Answers): We give these answers to the model along with X_train. The model looks at a question (X_train), guesses, checks the answer (y_train), and learns from its mistakes.
+Code: model.fit(X_train_res, y_train_res) (This is the studying phase).
+X_test (Final Exam Questions): This is the remaining 20% of transactions. We give these to the trained model and say, "Based on what you learned, make your predictions." We do NOT give the model the answers.
+Code: model.predict_proba(X_test) (This is the student taking the exam).
+y_test (Final Exam Answer Key): This is the actual truth for those 20% of transactions. The model never sees this during training or predicting. Only you (the teacher) use this to grade the model.
+Why do we use both X_test and y_test in the scoring line?
+Let's look at the exact line of code that is confusing you:
+
+python
+score = roc_auc_score(y_test, model.predict_proba(X_test)[:,1])
+Here is exactly what is happening in that line:
+
+model.predict_proba(X_test): You hand the model the final exam questions (X_test). The model reads the features and spits out its predictions (e.g., "Transaction 1 has a 90% chance of being fraud, Transaction 2 has a 10% chance").
+y_test: You pull out your teacher's answer key, which holds the real truth (e.g., "Transaction 1 was fraud, Transaction 2 was safe").
+roc_auc_score(...): This is the grading rubric. You hand it the model's predictions and your answer key (y_test). It compares the two to calculate the final grade (the AUC score).
+To summarize: You test the model on X_test, which generates predictions. You then evaluate the model's accuracy by comparing those predictions against y_test.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// why we are usig post method , 
+// In HTTP, a GET request is designed to retrieve data without sending a "body".
+//  If you used a GET request, you would have to attach all of this information 
+// into the URL as query parameters (e.g., ?amount=500&hour_of_day=14&user_avg...). 
+// A POST request allows us to neatly package all this data into a secure JSON body.
+
+// 2. The server is computing something, not just retrieving it
+// In RESTful API design, GET is used to fetch a static resource that already exists on the server
+//  (like fetching a user profile from a database).
+
+// In this case, the fraud score doesn't exist yet. The FastAPI server takes the data you send, 
+// runs it through a Machine Learning algorithm, and calculates a brand new score on the fly.
+//  POST is the standard HTTP method to use when you are asking a server to process data or perform a complex calculation, 
+// even if the end goal is to return the result of that calculation to you.
