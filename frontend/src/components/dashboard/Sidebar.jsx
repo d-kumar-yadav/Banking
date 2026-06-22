@@ -15,7 +15,6 @@ const Sidebar = ({ setislogin }) => {
       if(response.status === 200){
         toast.success('Logged out successfully');
         if (setislogin) setislogin(false); // Tell React the user is logged out
-        localStorage.removeItem("setislogin"); // Clear the login state from localStorage
         navigate('/');
       }
       else {

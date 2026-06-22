@@ -19,7 +19,7 @@ const TransactionHistory = () => {
   useEffect(() => {
     const fetchAccounts = async () => {
       try {
-        const res = await axios.get('http://localhost:4000/api/accounts/getallaccount', config);
+        const res = await axios.get('http://localhost:4000/api/accounts/user/getallaccount', config);
         if (res.data.success && res.data.accounts.length > 0) {
           setAccounts(res.data.accounts);
           setSelectedAccount(res.data.accounts[0].accountNumber);

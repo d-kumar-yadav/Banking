@@ -1,83 +1,20 @@
 const express= require("express")
 const usermodel = require("../models/user_model");
 const branchmodel = require("../models/branch_model");
-const blacklistmodel = require("../models/blacklist_model");
+const blacklistmodel = require("../models/blacklist");
 const jwt = require("jsonwebtoken");
-const emailservice = require("../utils/email_service");
-const managerModel = require("../models/manager");
+const emailservice = require("../service/email");
+const employeeModel = require("../models/employe_model");
 const transactionmodel = require("../models/transaction");
 const ledgermodel = require("../models/ledger");
 const mongoose = require("mongoose");
 
-// for register
-
-exports.register= async(req,res) =>{
-
- try{
-  const { email,name, password  }= req.body;
-  
-     if(!email || !name || !password ){
-        return res.status (400) .json({
-            success:false,
-            message:"All fields are mandatory"
-        })
-     }
-
-         const existinguser= await usermodel.findOne({  email  });
-         if(existinguser){
-            return res.status(422).json({
-                success:false,
-                message:"User already exists with this email"
-            });
-         }
-
-         // create user in  database
-         const user= await usermodel.create({
-            name,email,password, role:"superadmin"
-         });
-
-     
-         
-         try {
-             await emailservice(
-                 user.email, 
-                 "Registration Successful",
-                 `Dear ${user.name},\n\nThank you for registering with our banking application. We are excited to have you on board!\n\nBest regards,\nThe Banking Team`
-             );
-         } catch (emailError) {
-             console.error("Welcome email failed to send:", emailError);
-         }
-
-         const token = jwt.sign({id: user._id}, process.env.JWT_SECRET_KEY, {expiresIn: "1d"});
-        
-
-          return res.status(200).cookie("token", token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "strict",
-            maxAge: 24 * 60 * 60 * 1000 // 1 day
-        }).json({
-            success:true,       
-            message:"User registered successful",
-            role: user.role || 'customer'
-         }) 
-
-    }
-
-    catch(error){
-        console.error("Error in signupcontroller", error);
-        res.status(500).json({
-            success:false,
-            message: error.message || "Signup failed due to server error"
-        });
-    }
-
- }
 
 // for login
  exports.login= async (req, res)=>{
 
 try{
+    console.log("login me aya")
 
     const {email,password } = req.body;
     if (!password || !email ) {
@@ -87,7 +24,7 @@ try{
         });
      }
 // select +password because in usermodel i have set select false for password field so it will not return password by default but i need it to compare the password so i have to select it explicitly
-     const user= await usermodel.findOne({email}).select("+password");
+     const user= await employeeModel.findOne({email}).select("+password");
      if(!user){
         return res.status(400).json({
             success:false,
@@ -104,7 +41,7 @@ try{
           
         
 
-        const userlogin = await usermodel.findByIdAndUpdate(
+        const userlogin = await employeeModel.findByIdAndUpdate(
             user._id, 
             {
                 $set: { lastLogin: new Date() }
@@ -119,12 +56,12 @@ try{
         return res.status(200).cookie("token", token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
-            sameSite: "strict",
+            sameSite: "lax",
             maxAge: 24 * 60 * 60 * 1000 // 1 day
         }).json({
             success:true,       
             message:"Login successful",
-            role: user.role || 'customer'
+            role: user.role 
          })
 
 
@@ -180,10 +117,11 @@ exports.logout= async (req, res)=>{
 // for create branch
 exports.createBranch =async (req ,res) =>{
   const {branchName , branchPhone , branchEmail ,address} = req.body;
+  console.log("createBranch called with body:", req.body);
 
-    const user= req.user; // Access the authenticated user from the request object;
+    const user= req.user; 
 
-    if(user.role !== "superadmin"){
+    if(user.role !== "Superadmin"){
         return res.status(403).json({
             success:false,
             message:"Forbidden access. Super Admin only."
@@ -212,6 +150,14 @@ exports.createBranch =async (req ,res) =>{
 
     }
     catch(err){
+        console.error("Error in createBranch:", err);
+        if (err.code === 11000) {
+            const field = Object.keys(err.keyValue)[0];
+            return res.status(400).json({
+                success: false,
+                message: `Branch with this ${field} already exists.`
+            });
+        }
         return res.status(500).json({
             success:false,
             message:"Failed to create branch due to server error"
@@ -223,7 +169,7 @@ exports.createBranch =async (req ,res) =>{
  exports.getAllBranches = async(req ,res)=>{
 
     const user=req.user;
-    if(user.role !== "superadmin"){
+    if(user.role !== "Superadmin"){
         return res.status(403).json({
             success:false,
             message:"Forbidden access. Super Admin only."
@@ -252,7 +198,7 @@ exports.createBranch =async (req ,res) =>{
 exports.getBranchById = async(req ,res) =>{
 
     const user=req.user;    
-    if(user.role !== "superadmin"){
+    if(user.role !== "Superadmin"){
         return res.status(403).json({
             success:false,
             message:"Forbidden access. Super Admin only."
@@ -267,7 +213,7 @@ exports.getBranchById = async(req ,res) =>{
                 message:"Branch not found"
             })
         }   
-        const manager = await managerModel.findOne({ branch: branch._id });
+        const manager = await employeeModel.findOne({ branch: branch._id, role: "Manager" });
         return res.status(200).json({
             success:true,
             message:"Branch retrieved successfully",
@@ -287,7 +233,7 @@ exports.getBranchById = async(req ,res) =>{
 // update branch
 exports.updateBranch = async(req ,res) =>{
     const user=req.user;
-    if(user.role !== "superadmin"){
+    if(user.role !== "Superadmin"){
         return res.status(403).json({
             success:false,
             message:"Forbidden access. Super Admin only."
@@ -328,7 +274,7 @@ exports.updateBranch = async(req ,res) =>{
 
 exports.deleteBranch = async(req ,res) =>{
     const user=req.user;
-    if(user.role !== "superadmin"){ 
+    if(user.role !== "Superadmin"){ 
         return res.status(403).json({
             success:false,
             message:"Forbidden access. Super Admin only."
@@ -485,7 +431,7 @@ exports.allocate_funds = async(req,res)=>{
 // branch tanx
 exports.branch_tranx = async(req,res) =>{
     const user=req.user;
-    if(user.role !== "superadmin"){
+    if(user.role !== "Superadmin"){
         return res.status(403).json({
             success:false,
             message:"Forbidden access. Super Admin only."
@@ -511,5 +457,232 @@ exports.branch_tranx = async(req,res) =>{
             success:false,
             message:"Failed to retrieve transactions due to server error"
         })
+    }
+}
+
+// add employee/manger 
+exports.add_employee = async (req ,res) =>{
+   const {name , email  , password ,phone , role}= req.body; 
+   const user=req.user;
+
+if(user.role !== "Superadmin"){
+        return res.status(403).json({
+            success:false,
+            message:"Forbidden access. Super Admin only."
+        })
+    }
+
+    const newemployee= await employeeModel.create({
+        name,
+        email,
+        password,
+        phone,
+        role,   
+    })
+
+    return res.status(201).json({
+        success:true,
+        message:"Employee created successfully",
+        employee: newemployee
+    })
+
+
+}
+
+// add employee/manager to branch
+exports.add_to_branch = async (req,res)=>{
+    const {branchid , employeeid} = req.body;
+    const user=req.user;    
+    if(user.role !== "Superadmin"){
+        return res.status(403).json({
+            success:false,
+            message:"Forbidden access. Super Admin only."
+        })
+    }
+
+    const branch = await branchmodel.findById(branchid);
+    if(!branch){
+        return res.status(404).json({
+            success:false,
+            message:"Branch not found"
+        })
+        
+    }
+    const employee = await employeeModel.findById(employeeid);
+    if(!employee){
+        return res.status(404).json({
+            success:false,
+            message:"Employee not found"
+        })
+    }
+    employee.branch = branch;
+    branch.employee = employee; 
+    await branch.save();
+    await employee.save();
+
+    return res.status(200).json({
+        success: true,
+        message: "Successfully assigned to branch"
+    });
+}
+
+// get all employees
+exports.getAllEmployees = async (req, res) => {
+    const user = req.user;
+    if (user.role !== "Superadmin") {
+        return res.status(403).json({
+            success: false,
+            message: "Forbidden access. Super Admin only."
+        });
+    }
+    try {
+        const employees = await employeeModel.find().select("-password").populate("branch");
+        return res.status(200).json({
+            success: true,
+            message: "Employees retrieved successfully",
+            employees
+        });
+    } catch (err) {
+        return res.status(500).json({
+            success: false,
+            message: "Failed to retrieve employees due to server error"
+        });
+    }
+};
+
+// get employee by id
+exports.getEmployeeById = async (req, res) => {
+    const {id}= req.params;
+        const user= req.user;
+       if(user.role !== "Superadmin"){
+        return res.status(403).json({
+            success:false,
+            message:"Forbidden access. Super Admin only."
+        })
+    }
+    const employee= await employeeModel.findById(id).select("-password").populate("branch");
+    if(!employee){
+        return res.status(404).json({
+            success:false,
+            message:"Employee not found"
+        })
+    }
+    return res.status(200).json({   
+        success:true,
+        message:"Employee retrieved successfully",
+        employee
+    })  
+}
+
+// update emplouee
+exports.updateEmployee = async (req,res) =>{
+    const {id} = req.params;
+    const {name , email , phone , role , branchid} = req.body;
+    const user= req.user;
+    if(user.role !== "Superadmin"){
+        return res.status(403).json({
+            success:false,
+            message:"Forbidden access. Super Admin only."
+        })
+    }
+     const employee= await employeeModel.findById(id).select("-password")
+    if(!employee){
+        return res.status(404).json({
+            success:false,
+            message:"Employee not found"
+        })
+    }
+    employee.name = name || employee.name;
+    employee.email = email || employee.email;
+    employee.phone = phone || employee.phone;
+    employee.role = role || employee.role;
+    employee.branch = branchid || employee.branch;
+    await employee.save();
+    return res.status(200).json({  
+        success:true,
+        message:"Employee updated successfully",
+        employee
+    })
+}
+
+// delete employee
+exports.deleteEmployee = async (req,res) =>{
+    const {id} = req.params;
+    const user= req.user;
+    if(user.role !== "Superadmin"){
+        return res.status(403).json({
+            success:false,  
+            message:"Forbidden access. Super Admin only."
+        })
+    }
+    const employee= await employeeModel.findById(id);
+    if(!employee){
+        return res.status(404).json({
+            success:false,
+            message:"Employee not found"
+        })
+    }
+    await employee.deleteOne();
+    return res.status(200).json({
+        success:true,
+        message:"Employee deleted successfully"
+    })
+}        
+
+// Get own employee info
+exports.getMe = async (req, res) => {
+    try {
+        const employee = await employeeModel.findById(req.user._id).select("-password").populate("branch");
+        if (!employee) {
+            return res.status(404).json({
+                success: false,
+                message: "Employee not found"
+            });
+        }
+       
+        return res.status(200).json({
+            success: true,
+            employee,
+            
+        });
+    } catch (err) {
+        return res.status(500).json({
+            success: false,
+            message: "Failed to retrieve employee data"
+        });
+    }
+}
+
+// get branch balance
+exports.branchbalane = async(req ,res) =>{
+    try {
+        const user = req.user;
+        if(user.role !== "Manager") {
+            return res.status(403).json({
+                success: false,
+                message: "Unauthorized access. Manager only."
+            });
+        }
+        
+        const branch = await branchmodel.findById(user.branch);
+        if (!branch) {
+            return res.status(404).json({
+                success: false,
+                message: "Branch not found for this manager"
+            });
+        }
+
+        const balance = await branch.getbalance();
+        
+        return res.status(200).json({
+            success: true,
+            branchBalance: balance
+        });
+    } catch (error) {
+        console.error("Error in branchbalance:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fetch branch balance"
+        });
     }
 }

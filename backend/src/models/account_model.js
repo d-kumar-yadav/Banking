@@ -3,6 +3,7 @@
  const countermodel = require("./counter_model");
  const Branch = require("./branch_model");
 
+
  const accountschema= new mongoose.Schema({
 
     user:{
@@ -41,8 +42,6 @@
         immutable: true // Once generated, the account number can never be changed
     },
 
-    
-    
    
    totalCreditLimit: { type: Number, default: 100000 } ,
     
@@ -75,7 +74,7 @@
         status: { type: String, enum: ['Active', 'Blocked', 'Expired'], default: 'Active' }
     }],
 
-    branchId: { type: mongoose.Schema.Types.ObjectId, ref: 'Branch' }
+    branchCode: { type: mongoose.Schema.Types.ObjectId, ref: 'Branch' }
 
  } ,
 {

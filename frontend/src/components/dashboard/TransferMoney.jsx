@@ -22,7 +22,7 @@ const TransferMoney = () => {
   useEffect(() => {
     const fetchAccounts = async () => {
       try {
-        const res = await axios.get('http://localhost:4000/api/accounts/getallaccount', config);
+        const res = await axios.get('http://localhost:4000/api/accounts/user/getallaccount', config);
         if (res.data.success) {
           const activeAccounts = res.data.accounts.filter(acc => acc.status === 'Active');
           setAccounts(activeAccounts);

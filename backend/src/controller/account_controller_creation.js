@@ -8,6 +8,7 @@ const otpmodel = require("../models/otp_model");
 const { sendSMS } = require("../service/sms");
 const transactionmodel = require("../models/transaction");
 const refernceaccountmodel = require("../models/refernce_account");
+const Branch = require("../models/branch_model");
 
 //  for account creation
 exports.createaccount = async (req, res) => {
@@ -17,12 +18,12 @@ exports.createaccount = async (req, res) => {
     try {
 
         const userId = req.user._id;
-        const { pan_image, adhar_image, signature, image, address, pan_id, adhar_id, otp, account_type } = req.body;
+        const { pan_image, adhar_image, signature, image, address, pan_id, adhar_id, otp, account_type, branchCode } = req.body;
 
-        if (!pan_image || !adhar_image || !signature || !image || !address || !pan_id || !adhar_id || !otp || !account_type) {
+        if (!pan_image || !adhar_image || !signature || !image || !address || !pan_id || !adhar_id || !otp || !account_type || !branchCode) {
             return res.status(400).json({
                 success: false,
-                message: "All account details, account type, and OTP are required"
+                message: "All account details, account type, branch code, and OTP are required"
             });
         }
 
@@ -59,7 +60,15 @@ exports.createaccount = async (req, res) => {
             });
         }
 
-        const refernceaccount = await refernceaccountmodel.create({ user: userId, account_type });
+        const branch = await Branch.findOne({ branchCode: branchCode });
+        if (!branch) {
+            return res.status(404).json({
+                success: false,
+                message: "Branch not found for the provided Branch Code"
+            });
+        }
+
+        const refernceaccount = await refernceaccountmodel.create({ user: userId, account_type, branchCode: branch._id });
 
         const user = await usermodel.findByIdAndUpdate(
             userId,
@@ -216,30 +225,32 @@ exports.getbalance = async (req, res) => {
 
 
 
-// ADMIN CONTROLLERS FOR ACCOUNTS
+// Manager  CONTROLLERS FOR ACCOUNTS
 
 
 
 
 
 
-// approve frozen account by admin 
+// approve frozen account by Manager 
 
 exports.approvefrozenaccount = async (req, res) => {
 
     try {
-        if (req.user.role != "Admin") {
+        if (req.user.role != "Manager" && req.user.role != "Superadmin") {
             return res.status(403).json({
                 success: false,
                 message: "Unauthorized: Admin access required"
             })
         }
 
-        const { accountNumber } = req.params;
+        const { accountNumber , branchCode } = req.body;
         
+//  here we  find all account with frozen statue  but we cannot unfreeze every account means thta account may belong to dofffent branch 
+//  so unfreeze that account which is related to that branch which manager is managing
 
 
-        const account = await accountmodel.findOne({ accountNumber: accountNumber, status: "Frozen" }).populate("user");
+        const account = await accountmodel.findOne({ accountNumber: accountNumber, status: "Frozen" , branchCode: branchCode }).populate("user");
         if (!account) {
             return res.status(404).json({
                 success: false,
@@ -286,11 +297,11 @@ exports.approvefrozenaccount = async (req, res) => {
 
 }
 
-// Admin: Approve account creation request
+// Manager: Approve account creation request
 exports.approveAccount = async (req, res) => {
     try {
-        if (req.user.role !== 'Admin') {
-            return res.status(403).json({ success: false, message: "Unauthorized: Admin access required" });
+        if (req.user.role !== 'Manager' && req.user.role !== 'Superadmin') {
+            return res.status(403).json({ success: false, message: "Unauthorized: Manager or Superadmin access required" });
         }
 
         const { userId, refrencenumber } = req.params; // The user whose account to be  approved
@@ -323,6 +334,7 @@ exports.approveAccount = async (req, res) => {
             user: userId,
             account_type: refAccount.account_type,
             status: "Active",
+            branchCode: refAccount.branchCode
         });
 
         await account.populate("user");
@@ -355,11 +367,11 @@ exports.approveAccount = async (req, res) => {
     }
 };
 
-// Admin: Reject account creation request
+// Manager: Reject account creation request
 exports.rejectAccount = async (req, res) => {
     try {
-        if (req.user.role !== 'Admin') {
-            return res.status(403).json({ success: false, message: "Unauthorized: Admin access required" });
+        if (req.user.role !== 'Manager' && req.user.role !== 'Superadmin') {
+            return res.status(403).json({ success: false, message: "Unauthorized: Manager or Superadmin  access required" });
         }
 
         const { userId, refrencenumber } = req.params;
@@ -409,13 +421,13 @@ exports.rejectAccount = async (req, res) => {
     }
 };
 
-// admin can get accoutn details by account number
+// Manager can get account details by account number
 exports.getaccountdetails = async (req, res) => {
     try {
-        if (req.user.role != "Admin") {
+        if (req.user.role != "Manager" && req.user.role != "Superadmin") {
             return res.status(403).json({
                 success: false,
-                message: "Unauthorized: Admin access required"
+                message: "Unauthorized: Manager or Superadmin access required"
             })
         }
 
@@ -443,13 +455,13 @@ exports.getaccountdetails = async (req, res) => {
     }
 }
 
-// admin can  see tranasaction whose status is flagged do it by account number
+// Manager can  see tranasaction whose status is flagged do it by account number
 exports.getflaggedtransactions = async (req, res) => {
     try {
-        if (req.user.role != "Admin") {
+        if (req.user.role != "Manager" && req.user.role != "Superadmin ") {
             return res.status(403).json({
                 success: false,
-                message: "Unauthorized: Admin access required"
+                message: "Unauthorized: Manager or Superadmin access required"
             })
         }
         const { accountNumber } = req.params;
@@ -478,16 +490,18 @@ exports.getflaggedtransactions = async (req, res) => {
     }
 }       
 
-// Admin: get all pending reference accounts
+// Manager: get all pending reference accounts
 exports.getallpendingaccounts = async (req, res) => {
     try {
-        if (req.user.role !== "Admin") {
+        if (req.user.role !== "Manager" && req.user.role !== "Superadmin ") {
             return res.status(403).json({
                 success: false,
-                message: "Unauthorized: Admin access required"
+                message: "Unauthorized: Manager or Superadmin access required"
             });
         }
-        const pendingaccounts = await refernceaccountmodel.find().populate("user", "+pan_id +adhar_id +phone +address");
+        // The managermiddleware sets req.user to the employee object, which has the 'branch' ObjectId.
+        // And the reference account has 'branchCode' as the Branch ObjectId.
+        const pendingaccounts = await refernceaccountmodel.find({ branchCode: req.user.branch }).populate("user", "+pan_id +adhar_id +phone +address");
         return res.status(200).json({
             success: true,
             message: "Pending accounts fetched successfully",

@@ -1,9 +1,9 @@
 import React from 'react';
 import { ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import AdminLoginForm from '../components/AdminLoginForm';
+import ManagerLoginForm from '../components/ManagerLoginForm';
 
-const AdminLogin = ({ setislogin_admin }) => {
+const ManagerLogin = ({ setislogin_manager }) => {
   return (
     <div className="min-h-screen bg-slate-900 font-sans text-white flex justify-center items-center p-4 relative overflow-hidden selection:bg-amber-500 selection:text-slate-900">
       
@@ -33,18 +33,18 @@ const AdminLogin = ({ setislogin_admin }) => {
 
         {/* Form Section */}
         <div className="p-8 sm:p-10">
-          <AdminLoginForm setislogin_admin={setislogin_admin} />
+          <ManagerLoginForm setislogin_manager={setislogin_manager} />
           
           <div className="mt-8 text-center border-t border-slate-100 pt-6">
-            <Link to="/login" className="text-sm font-bold text-slate-500 hover:text-[#5B0A1C] transition-colors flex justify-center items-center gap-2">
-               ← Return to Customer Portal
+            <Link to="/" className="text-sm font-bold text-slate-500 hover:text-[#5B0A1C] transition-colors flex justify-center items-center gap-2">
+               ← Return to Portal Select
             </Link>
           </div>
           <div className="text-center mt-2">
-                      <Link to="/" className="inline-flex items-center text-sm font-medium text-slate-400 hover:text-[#5B0A1C] transition-colors duration-200 group">
-                        <span className="mr-1 group-hover:-translate-x-1 transition-transform">&larr;</span> Back to Home
-                      </Link>
-                    </div>
+            <a href="http://localhost:5173" className="inline-flex items-center text-sm font-medium text-slate-400 hover:text-[#5B0A1C] transition-colors duration-200 group">
+              <span className="mr-1 group-hover:-translate-x-1 transition-transform">&larr;</span> Back to Customer Website
+            </a>
+          </div>
         </div>
       </div>
 
@@ -52,4 +52,4 @@ const AdminLogin = ({ setislogin_admin }) => {
   );
 };
 
-export default AdminLogin;
+export default ManagerLogin;

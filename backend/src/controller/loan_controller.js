@@ -123,10 +123,11 @@ const userId= req.user._id;
 exports.adminLoanReviewController= async (req, res) =>{
     try{
         
-         if(req.user.role!= "Admin") {
+         const role = req.user.role ? req.user.role.toLowerCase() : "";
+         if(role !== "manager" && role !== "superadmin") {
              return res.status(403).json({
                 success:false,
-                message: "Unauthorized: Admin access required"
+                message: "Unauthorized: Manager access required"
              })
         }
 
@@ -148,10 +149,11 @@ exports.adminLoanReviewController= async (req, res) =>{
 // Admin can get all loans (regardless of status)
 exports.getAllLoansController = async (req, res) => {
     try {
-        if (req.user.role !== "Admin") {
+        const role = req.user.role ? req.user.role.toLowerCase() : "";
+        if (role !== "manager" && role !== "superadmin") {
             return res.status(403).json({
                 success: false,
-                message: "Unauthorized: Admin access required"
+                message: "Unauthorized: Manager access required"
             });
         }
 
@@ -174,10 +176,11 @@ exports.getAllLoansController = async (req, res) => {
 // Admin can get details of a specific loan by its loan_id
 exports.getLoanDetailsController = async (req, res) => {
     try {
-        if (req.user.role !== "Admin") {
+        const role = req.user.role ? req.user.role.toLowerCase() : "";
+        if (role !== "manager" && role !== "superadmin") {
             return res.status(403).json({
                 success: false,
-                message: "Unauthorized: Admin access required"
+                message: "Unauthorized: Manager access required"
             });
         }
 
@@ -205,10 +208,11 @@ exports.getLoanDetailsController = async (req, res) => {
 // approve loan 
 exports.approveLoanController= async (req ,res)=>{
     try{
-           if(req.user.role!="Admin") {
+           const role = req.user.role ? req.user.role.toLowerCase() : "";
+           if(role !== "manager" && role !== "superadmin") {
             return res.status(403).json({
                 success:false,
-                message:"Unauthorized: Admin access required"
+                message:"Unauthorized: Manager access required"
             })
         }
 
@@ -249,10 +253,11 @@ exports.approveLoanController= async (req ,res)=>{
 // reject loan
 exports.rejectLoanController= async (req ,res)=>{
     try{
-           if(req.user.role!="Admin") {
+           const role = req.user.role ? req.user.role.toLowerCase() : "";
+           if(role !== "manager" && role !== "superadmin") {
             return res.status(403).json({
                 success:false,
-                message:"Unauthorized: Admin access required"
+                message:"Unauthorized: Manager access required"
             })
         }
 

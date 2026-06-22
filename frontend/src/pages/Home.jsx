@@ -39,9 +39,6 @@ const Home = () => {
             LOGIN
           </Link>
           <div className="h-6 w-px bg-slate-200 mx-1 hidden lg:block"></div>
-          <Link to="/Admin-login" className="hidden lg:flex group px-6 py-2.5 bg-slate-900 text-amber-400 font-bold rounded-lg hover:bg-black hover:-translate-y-0.5 hover:shadow-[0_10px_20px_-10px_rgba(245,158,11,0.4)] hover:border-amber-500/50 transition-all duration-300 text-sm shadow-md items-center gap-2 border border-slate-700">
-            <Settings size={16} className="group-hover:rotate-90 transition-transform duration-500" /> ADMIN
-          </Link>
         </div>
       </nav>
 

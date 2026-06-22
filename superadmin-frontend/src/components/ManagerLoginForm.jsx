@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
-const AdminLoginForm = ({ setislogin_admin }) => {
+const ManagerLoginForm = ({ setislogin_manager }) => {
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -19,30 +19,30 @@ const AdminLoginForm = ({ setislogin_admin }) => {
     e.preventDefault();
     try {
       
-      const response = await axios.post("http://localhost:4000/api/auth/login", formData);
+      const response = await axios.post("http://localhost:4000/api/employee/login", formData);
      if (response.status === 200) {
         const role = response.data.role;
         
-        if (role !== 'Admin') {
+        if (role !== 'Manager') {
           toast.error("User Doesnot exist.");
           setFormData({ email: '', password: '' });
-          navigate("/Admin-Login");
+          navigate("/Manager-login");
           return; // Stop the customer login process
         }
         else {
         toast.success("Login Successful!");
-        setislogin_admin(true);
-        localStorage.setItem("setislogin_admin", "true");
-        navigate("/AdminDashboard");
+        setislogin_manager(true);
+       
+        navigate("/ManagerDashboard");
         }
       }
     } catch (error) {
-      console.error("Admin login error:", error);
-      if (setislogin_admin) setislogin_admin(false);
+      console.error("Manager login error:", error);
+      if (setislogin_manager) setislogin_manager(false);
       toast.error(error.response?.data?.message || "Unauthorized Access.");
       setFormData({ email: '', password: '' });
-      localStorage.removeItem("setislogin_admin");
-      navigate("/Admin-Login");
+      
+      navigate("/Manager-login");
     }
   };
 
@@ -56,7 +56,7 @@ const AdminLoginForm = ({ setislogin_admin }) => {
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-xs font-bold text-slate-700 uppercase tracking-wide">Admin Email</label>
+        <label className="text-xs font-bold text-slate-700 uppercase tracking-wide">Manager Email</label>
         <div className="relative group">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#5B0A1C] transition-colors">
             <Mail size={18} />
@@ -68,7 +68,7 @@ const AdminLoginForm = ({ setislogin_admin }) => {
             value={formData.email}
             onChange={handleChange}
             className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5B0A1C]/20 focus:border-[#5B0A1C] transition-all shadow-sm"
-            placeholder="admin@mybank.com"
+            placeholder="manager@mybank.com"
           />
         </div>
       </div>
@@ -104,4 +104,4 @@ const AdminLoginForm = ({ setislogin_admin }) => {
   );
 };
 
-export default AdminLoginForm;
+export default ManagerLoginForm;

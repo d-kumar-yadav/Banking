@@ -6,17 +6,13 @@ import Dashboard from "./pages/Dashboard"
 import { useState, useEffect } from "react"
 import { Toaster } from 'react-hot-toast'
 import axios from "axios"
-import AdminLogin from "./pages/Admin_login"
-import AdminDashboard from "./pages/Admin_dash"
 import Private_user from "./components/PrivateRoute_user"
-import Private_admin from "./components/PrivateRoute_admin"
 import Loader from "./components/Loader"
 
 axios.defaults.withCredentials = true; 
 
 function App() {
   const [islogin, setislogin] = useState(false);
-  const [islogin_admin, setislogin_admin] = useState(false);
 
   const [isLoading, setIsLoading] = useState(true); 
 
@@ -25,15 +21,14 @@ function App() {
       try {
         // here browser automatticalu send toekn in cookies
         const response = await axios.get("http://localhost:4000/api/auth/verify");
-        if (response.data.role === "Admin" || response.data.role === "admin") {
-          setislogin_admin(true);
-        } else {
+        if (response.data.success) {
           setislogin(true);
+        } else {
+          setislogin(false);
         }
       } catch (error) {
         // If the token is invalid/expired, log them out
         setislogin(false);
-        setislogin_admin(false);
       } finally {
         setIsLoading(false); // Stop the loading screen
       }
@@ -89,11 +84,6 @@ function App() {
             <Dashboard setislogin={setislogin} />
           </Private_user>
         }></Route>
-        <Route path="/Admin-login" element={islogin_admin ? <Navigate to="/AdminDashboard" replace /> : <AdminLogin setislogin_admin={setislogin_admin} />} ></Route>
-        <Route path="/AdminDashboard/*" element={
-          <Private_admin islogin_admin={islogin_admin}>
-            <AdminDashboard setislogin_admin={setislogin_admin} />
-          </Private_admin > }></Route>
       </Routes>
     </div>
   )

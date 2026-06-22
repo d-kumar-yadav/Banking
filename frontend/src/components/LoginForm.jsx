@@ -30,7 +30,7 @@ const LoginForm = ({ setislogin }) => {
       if (response.status === 200) {
         const role= response.data.role;
         if (role !== 'customer') {
-          console.log("Login attempt with non-customer role:", role);
+      
           toast.error("User Doesnot exist.");
           setFormData({ email: '', phone: '', password: '' });
           navigate("/login");
@@ -39,12 +39,12 @@ const LoginForm = ({ setislogin }) => {
         
         toast.success("Login Successful!");
         setislogin(true);
-        localStorage.setItem("setislogin", "true");
+       
         navigate("/Dashboard");
       }
     } catch (error) {
       console.error("Login error:", error);
-      localStorage.removeItem("setislogin");
+     
       setislogin(false);
       toast.error(error.response?.data?.message || "Login Failed. Please check your credentials.");
       navigate("/login");

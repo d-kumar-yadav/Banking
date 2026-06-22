@@ -30,7 +30,7 @@ const userschema = new mongoose.Schema({
     select: false
    },
    
-   role: { type: String, enum: ['customer', 'Admin' , 'superadmin'], default: 'customer' },
+   role: { type: String, enum: ['customer'], default: 'customer' },
    
    kycStatus: { type: String, enum: ['pending', 'verified'], default: 'pending' },
  

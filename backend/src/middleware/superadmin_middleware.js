@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken"); // Make sure to import jwt
-const usermodel = require("../models/user_model"); // Adjust the path to your user model
+const employeemodel= require("../models/employe_model");
 
 exports.superadminMiddleware = async (req, res, next) => {
   try {
@@ -24,7 +24,7 @@ exports.superadminMiddleware = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
     
     // decoded will contain payload data, here we have user id in payload data
-    const user = await usermodel.findById(decoded.id);
+    const user = await employeemodel.findById(decoded.id);
 
     if (!user) {
         return res.status(404).json({
@@ -33,15 +33,15 @@ exports.superadminMiddleware = async (req, res, next) => {
         });
     }
 
-    // Check the role! Make sure "Admin" matches exactly what is in your user_model.js enum
-    if (user.role !== "Admin") { 
+    // Check the role! Make sure it matches what is in your employe_model.js enum
+    if (!user.role || user.role.toLowerCase() !== "superadmin") { 
       return res.status(403).json({
         success: false,
         message: "Forbidden access. Super Admin only.",
       });
     }
 
-    // FIXED: Assigned the 'user' variable you found in the DB to req.user
+
     req.user = user; 
     
     next();

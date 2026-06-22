@@ -36,7 +36,8 @@ const AccountsOverview = () => {
     pan_image: 'placeholder_pan_url', // Using placeholders since we aren't handling real file uploads in this demo
     adhar_image: 'placeholder_adhar_url',
     signature: 'placeholder_signature_url',
-    image: 'placeholder_user_image_url'
+    image: 'placeholder_user_image_url',
+    branchCode: '' // This will be set based on the user's branch or selection 
   });
   
 
@@ -65,7 +66,7 @@ const AccountsOverview = () => {
     try {
       setLoading(true);
     
-      const res = await axios.get('http://localhost:4000/api/accounts/getallaccount');
+      const res = await axios.get('http://localhost:4000/api/accounts/user/getallaccount', { withCredentials: true });
       if (res.data.success) {
         setAccounts(res.data.accounts);
         if (res.data.accounts.length === 1) {
@@ -75,7 +76,7 @@ const AccountsOverview = () => {
         // Fetch balances for each account concurrently using Promise.all
         const balancePromises = res.data.accounts.map(async (acc) => {
           try {
-            const balRes = await axios.get(`http://localhost:4000/api/accounts/balance/${acc.accountNumber}`);
+            const balRes = await axios.get(`http://localhost:4000/api/accounts/user/balance/${acc.accountNumber}`, { withCredentials: true });
             if (balRes.data.success) {
               return [acc.accountNumber, balRes.data.balance];
             }
@@ -105,7 +106,7 @@ const AccountsOverview = () => {
   const handleApplySubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:4000/api/accounts/createaccount', newAccountData);
+      const res = await axios.post('http://localhost:4000/api/accounts/user/createaccount', newAccountData, { withCredentials: true });
       if (res.data.success) {
         toast.success(res.data.message);
         setApplyaccount(false);
@@ -123,7 +124,7 @@ const AccountsOverview = () => {
         setLoading(true);
         try {
          
-          const res = await axios.get('http://localhost:4000/api/accounts/appliedaccounts');
+          const res = await axios.get('http://localhost:4000/api/accounts/user/appliedaccounts', { withCredentials: true });
           if (res.data.success) {
             setUserAppliedaccounts(res.data.appliedaccounts);
           }
@@ -389,6 +390,14 @@ const AccountsOverview = () => {
                 className="w-full px-4 py-3 bg-white/50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#5B0A1C]/20 focus:border-[#5B0A1C] outline-none transition-all"
                 value={newAccountData.phone}
                 onChange={e => setNewAccountData({ ...newAccountData, phone: e.target.value })}
+                required
+              />
+              <input
+                type="text"
+                placeholder="Branch Code (e.g. SBIN0000001)"
+                className="w-full px-4 py-3 bg-white/50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#5B0A1C]/20 focus:border-[#5B0A1C] outline-none transition-all"
+                value={newAccountData.branchCode}
+                onChange={e => setNewAccountData({ ...newAccountData, branchCode: e.target.value })}
                 required
               />
               <div className="relative">

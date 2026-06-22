@@ -59,7 +59,6 @@ const SignupForm = ({ setislogin }) => {
         toast.success("Successfully Registered!");
 
         if (setislogin) setislogin(true);
-        localStorage.setItem("setislogin", "true");
         navigate('/Dashboard');
       }
     } catch (error) {

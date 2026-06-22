@@ -158,7 +158,7 @@ if (existingPhoneUser) {
           return res.status(200).cookie("token", token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
-            sameSite: "strict",
+            sameSite: "lax",
             maxAge: 24 * 60 * 60 * 1000 // 1 day
         }).json({
             success:true,       
@@ -222,7 +222,7 @@ try{
         return res.status(200).cookie("token", token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
-            sameSite: "strict",
+            sameSite: "lax",
             maxAge: 24 * 60 * 60 * 1000 // 1 day
         }).json({
             success:true,       
@@ -282,29 +282,7 @@ exports.logout= async (req, res)=>{
 
 
 
-// admin logout
-exports.adminlogout = async(req ,res)=>{
-      
-       try{
-        const token = req.cookies?.token;
-        if(token){
-            await blacklistmodel.create({token});
-        }
-        res.clearCookie("token");
-        return res.status(200).json({
 
-            success:true,
-            message:"Admin logout Successfully"
-
-        })
-
-       }catch(err){
-        return res.status(500).json({
-            success:false,
-            message:"Internal Server error"
-        })
-       }
-}
 
  
 // token verify controller

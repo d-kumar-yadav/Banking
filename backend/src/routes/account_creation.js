@@ -2,28 +2,28 @@ const express = require("express");
 
 const router = express.Router();
 const { createaccount, getallaccount, getbalance, approveAccount, rejectAccount, approvefrozenaccount, getflaggedtransactions, getaccountdetails, getappliedaccounts, getallpendingaccounts } = require("../controller/account_controller_creation");
-const { authMiddleware, sytemusermiddleware } = require("../middleware/auth_middleware");
+const { authMiddleware, managermiddleware } = require("../middleware/auth_middleware");
 
-router.post("/createaccount", authMiddleware, createaccount);
+router.post("/user/createaccount", authMiddleware, createaccount);
 //  get all the account associated with that user
-router.get("/getallaccount", authMiddleware, getallaccount);
+router.get("/user/getallaccount", authMiddleware, getallaccount);
 
 // GET balance of user
-router.get("/balance/:accountNumber", authMiddleware, getbalance)
+router.get("/user/balance/:accountNumber", authMiddleware, getbalance)
 // get applied accounts
-router.get("/appliedaccounts", authMiddleware, getappliedaccounts);
+router.get("/user/appliedaccounts", authMiddleware, getappliedaccounts);
 
 
 
 
 
-router.post("/admin/approve-account/:userId/:refrencenumber", sytemusermiddleware, approveAccount);
-router.post("/admin/reject-account/:userId/:refrencenumber", sytemusermiddleware, rejectAccount);
-router.post("/admin/approve-frozen-account/:accountNumber", sytemusermiddleware, approvefrozenaccount);
+router.post("/Manager/approve-account/:userId/:refrencenumber", managermiddleware, approveAccount);
+router.post("/Manager/reject-account/:userId/:refrencenumber", managermiddleware, rejectAccount);
+router.post("/Manager/approve-frozen-account", managermiddleware  , approvefrozenaccount);
 
-router.get("/admin/pending-accounts", sytemusermiddleware, getallpendingaccounts);
-router.get("/admin/flagged-transactions/:accountNumber", sytemusermiddleware, getflaggedtransactions);
-router.get("/admin/accountdetails/:accountNumber", sytemusermiddleware, getaccountdetails);
+router.get("/Manager/pending-accounts", managermiddleware, getallpendingaccounts);
+router.get("/Manager/flagged-transactions/:accountNumber", managermiddleware, getflaggedtransactions);
+router.get("/Manager/accountdetails/:accountNumber", managermiddleware, getaccountdetails);
 
 
 module.exports = router;
