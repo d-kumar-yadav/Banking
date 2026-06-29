@@ -1,43 +1,61 @@
 require('dotenv').config();
-const nodemailer = require('nodemailer');
-
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  secure: true,
-  auth: {
-    type: 'OAuth2',
-    user: process.env.EMAIL_USER,
-    clientId: process.env.CLIENT_ID,
-    clientSecret: process.env.CLIENT_SECRET,
-    refreshToken: process.env.REFRESH_TOKEN,
-  }, 
-
-
-});
-
-
-
+const axios = require('axios');
 
 async function sendEmail(to, subject, text, html) {
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to,
-    subject,
-    text,
-    html,
-  };
-
-
   try {
-    await transporter.sendMail(mailOptions);
+    // 1. Get Access Token via OAuth2
+    const tokenResponse = await axios.post('https://oauth2.googleapis.com/token', {
+      client_id: process.env.CLIENT_ID,
+      client_secret: process.env.CLIENT_SECRET,
+      refresh_token: process.env.REFRESH_TOKEN,
+      grant_type: 'refresh_token'
+    });
+    const accessToken = tokenResponse.data.access_token;
+
+    // 2. Build MIME message
+    const boundary = 'foo_bar_baz';
+    const emailLines = [
+      `To: ${to}`,
+      `From: ${process.env.EMAIL_USER}`,
+      `Subject: =?utf-8?B?${Buffer.from(subject).toString('base64')}?=`,
+      `MIME-Version: 1.0`,
+      `Content-Type: multipart/alternative; boundary="${boundary}"`,
+      '',
+      `--${boundary}`,
+      `Content-Type: text/plain; charset="UTF-8"`,
+      '',
+      text,
+      '',
+      `--${boundary}`,
+      `Content-Type: text/html; charset="UTF-8"`,
+      '',
+      html,
+      '',
+      `--${boundary}--`
+    ];
+    
+    // 3. Base64url encode the raw message
+    const raw = Buffer.from(emailLines.join('\r\n')).toString('base64')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
+
+    // 4. Send via Gmail API over HTTPS (port 443) which bypasses Render's blocked ports
+    await axios.post(
+      'https://gmail.googleapis.com/upload/gmail/v1/users/me/messages/send',
+      { raw: raw },
+      {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
     console.log(`Email sent to ${to} with subject "${subject}"`);
   } catch (error) {
-    console.error(`Error sending email to ${to}:`, error);
-    // Removed throw error; so the app doesn't crash if the Gmail token expires
+    console.error(`Error sending email to ${to}:`, error.response ? error.response.data : error.message);
   }
-
 }
-
 
 
 // Generic email service
