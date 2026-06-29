@@ -1,5 +1,34 @@
 require('dotenv').config();
 const axios = require('axios');
+// const nodemailer = require('nodemailer');
+
+/* 
+// --- node mailer---
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  secure: true,
+  auth: {
+    type: 'OAuth2',
+    user: process.env.EMAIL_USER,
+    clientId: process.env.CLIENT_ID,
+    clientSecret: process.env.CLIENT_SECRET,
+    refreshToken: process.env.REFRESH_TOKEN,
+  }, 
+});
+*/
+
+/* 
+// --- node mailer (And delete the axios sendEmail below) ---
+async function sendEmail(to, subject, text, html) {
+  const mailOptions = { from: process.env.EMAIL_USER, to, subject, text, html };
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(`Email sent to ${to} with subject "${subject}"`);
+  } catch (error) {
+    console.error(`Error sending email to ${to}:`, error);
+  }
+}
+*/
 
 async function sendEmail(to, subject, text, html) {
   try {
