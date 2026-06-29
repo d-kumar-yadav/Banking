@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axios from '../../api/axiosInstance';
 import { Check, X, Eye, FileText, User } from 'lucide-react';
 import toast from 'react-hot-toast';
 

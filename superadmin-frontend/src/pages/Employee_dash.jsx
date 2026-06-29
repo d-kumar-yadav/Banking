@@ -1,7 +1,7 @@
 import React from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import { LogOut, ShieldCheck } from 'lucide-react';
-import axios from 'axios';
+import axios from '../api/axiosInstance';
 import toast from 'react-hot-toast';
 
 import EmployeeDashboardHome from '../components/Employee/EmployeeDashboardHome';

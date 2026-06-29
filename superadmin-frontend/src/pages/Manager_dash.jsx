@@ -1,7 +1,7 @@
 import React from 'react';
 import { Routes, Route, NavLink, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Users, FileText, CreditCard, LogOut, ShieldCheck } from 'lucide-react';
-import axios from 'axios';
+import axios from '../api/axiosInstance';
 import toast from 'react-hot-toast';
 
 import ManagerDashboardHome from '../components/Manager/ManagerDashboardHome';

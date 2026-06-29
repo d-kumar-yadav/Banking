@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Mail, Lock, ArrowRight, ShieldAlert } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../api/axiosInstance';
 import toast from 'react-hot-toast';
 
 const SuperadminLoginForm = ({ setislogin_superadmin }) => {

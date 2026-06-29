@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import axios from '../../api/axiosInstance';
 import { Search, ShieldAlert, CheckCircle, Lock, Unlock, DollarSign, Activity, AlertTriangle, User, Info, CreditCard, FileText } from 'lucide-react';
 import toast from 'react-hot-toast';
 
