@@ -172,6 +172,6 @@ The Banking Team`;
   await sendEmail(to, subject, text, html);
 }
 
-module.exports = { transporter, emailservice, email_payment_notification };
+module.exports = { emailservice, email_payment_notification };
  
  
