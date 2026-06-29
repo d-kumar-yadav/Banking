@@ -25,14 +25,14 @@ app.add_middleware(
 
 
 # load pretrained model , it loadd only once when server start
-fraud_model = joblib.load("fraud_model.pkl") 
+fraud_model = joblib.load("fraud_model.pkl.gz") 
 
 #  credit simulator model
-credit_model = joblib.load("credit_model.pkl")
+credit_model = joblib.load("credit_model.pkl.gz")
 
 # loan model
-loan_model = joblib.load("loan_model.pkl")
-loan_encoders = joblib.load("loan_encoders.pkl")
+loan_model = joblib.load("loan_model.pkl.gz")
+loan_encoders = joblib.load("loan_encoders.pkl.gz")
 
 #  when node js send request fast api will check if json body match or not
 # if not then it will give error  
