@@ -3,13 +3,13 @@ import Home from "./pages/Home"
 import Login from "./pages/Login"
 import Signup from "./pages/Signup"
 import Dashboard from "./pages/Dashboard"
+import NotFound from "./pages/NotFound"
 import { useState, useEffect } from "react"
 import { Toaster } from 'react-hot-toast'
-import axios from "axios"
+import axios from "./api/axiosInstance";
 import Private_user from "./components/PrivateRoute_user"
 import Loader from "./components/Loader"
 
-axios.defaults.withCredentials = true; 
 
 function App() {
   const [islogin, setislogin] = useState(false);
@@ -20,9 +20,10 @@ function App() {
     const verifySession = async () => {
       try {
         // here browser automatticalu send toekn in cookies
-        const response = await axios.get("http://localhost:4000/api/auth/verify");
+        const response = await axios.get("/api/auth/verify");
         if (response.data.success) {
           setislogin(true);
+          localStorage.setItem('userId', response.data.userId);
         } else {
           setislogin(false);
         }
@@ -84,9 +85,11 @@ function App() {
             <Dashboard setislogin={setislogin} />
           </Private_user>
         }></Route>
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </div>
   )
 }
 
 export default App
+

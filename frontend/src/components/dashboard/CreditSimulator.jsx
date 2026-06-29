@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import axios from "axios";
+﻿import { useState, useEffect } from "react";
+import axios from "../../api/axiosInstance";
 import {
   Activity,
   Sliders,
@@ -31,7 +31,7 @@ const CreditSimulator = () => {
       const payload = { ...simulationData };
       const config = { headers: { Authorization: `Bearer ${token}` } };
       const res = await axios.post(
-        "http://localhost:4000/api/ml/simulate-credit",
+        "/api/ml/simulate-credit",
         payload,
         config
       );
@@ -228,3 +228,4 @@ const CreditSimulator = () => {
 };
 
 export default CreditSimulator;
+

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { Search, ShieldAlert, CheckCircle, Lock, Unlock, DollarSign, Activity, AlertTriangle, User, Info } from 'lucide-react';
+import { Search, ShieldAlert, CheckCircle, Lock, Unlock, DollarSign, Activity, AlertTriangle, User, Info, CreditCard, FileText } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const ManagerAccountManager = () => {
@@ -27,16 +27,17 @@ const ManagerAccountManager = () => {
       }
       setActiveTab('details'); // Reset to default tab on new search
     } catch (error) {
-      toast.error('Account not found');
+      toast.error(error.response?.data?.message || 'Account not found');
       setAccount(null); setFlaggedTxns([]);
     } finally {
       setLoading(false);
     }
   };
+  
 
   const handleUnfreeze = async () => {
     try {
-      const payload={accountNumber: account.accountNumber, branchCode: account.branchCode};
+      const payload={accountNumber: account.accountNumber};
       await axios.post(`http://localhost:4000/api/accounts/Manager/approve-frozen-account`, payload);
       toast.success('Account unfrozen successfully');
       setAccount({ ...account, status: 'Active' });
@@ -45,15 +46,30 @@ const ManagerAccountManager = () => {
 
   const handleInitialFund = async (e) => {
     e.preventDefault();
-    if (!fundAmount || fundAmount <= 0) { toast.error('Enter a valid amount'); return; }
+    
+    if (!fundAmount || fundAmount <= 0) { 
+        toast.error('Enter a valid amount'); 
+        return; 
+    }
+
+  
+    
+    if (!account || !account.accountNumber) {
+        toast.error('No account selected');
+        return;
+    }
+    
     try {
       const idempotencykey = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString();
-      await axios.post(`http://localhost:4000/api/intra/system/intial_fund`, {
+      await axios.post(`http://localhost:4000/api/employee/intialfund`, {
         toaccount: account.accountNumber, amount: Number(fundAmount), idempotencykey
       }, { withCredentials: true });
+      
       toast.success(`₹${fundAmount} credited successfully`);
       setFundAmount('');
-    } catch (error) { toast.error(error.response?.data?.message || 'Failed to issue initial funds'); }
+    } catch (error) { 
+        toast.error(error.response?.data?.message || 'Failed to issue initial funds'); 
+    }
   };           
 
   const tabs = [
@@ -115,7 +131,7 @@ const ManagerAccountManager = () => {
             })}
           </div>
 
-          {/* Main Content Display */}
+       
           <div className="lg:w-3/4 bg-white rounded-2xl overflow-hidden transition-all duration-500 flex flex-col shadow-sm border border-slate-200">
             <div className="p-8 flex-1 animate-in fade-in zoom-in-95 duration-300">
               
@@ -146,7 +162,7 @@ const ManagerAccountManager = () => {
                     </div>
                   </div>
                   
-                  {/* Core Information Grid */}
+              
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {[
                       { label: 'Email Address', value: account.user?.email, colSpan: 'md:col-span-2' },
@@ -218,8 +234,59 @@ const ManagerAccountManager = () => {
                         </div>
                         
                      </div>
+                  {/* Cards Section */}
+                  <div className="mt-8">
+                     <h3 className="text-lg font-bold mb-4 uppercase tracking-wider text-slate-500 border-b border-slate-100 pb-2">Issued Cards</h3>
+                     {(!account.cards || account.cards.length === 0) ? (
+                         <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 text-center text-slate-500 text-sm">No cards issued to this account.</div>
+                     ) : (
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                             {account.cards.map((card, idx) => (
+                                 <div key={idx} className="border border-slate-200 rounded-xl p-4 flex items-center gap-4">
+                                     <div className={`p-3 rounded-lg ${card.cardType === 'credit' ? 'bg-indigo-50 text-indigo-600' : 'bg-rose-50 text-rose-600'}`}>
+                                         <CreditCard className="w-6 h-6" />
+                                     </div>
+                                     <div className="flex-1">
+                                         <p className="font-bold text-slate-800 capitalize">{card.cardType} Card</p>
+                                         <p className="font-mono text-sm text-slate-500">{card.cardNumber}</p>
+                                     </div>
+                                     <div className="text-right">
+                                         <span className={`text-xs font-bold px-2 py-1 rounded uppercase tracking-wider ${card.status === 'Active' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>{card.status}</span>
+                                         <p className="text-xs text-slate-400 mt-1 uppercase">EXP: {card.expiryDate}</p>
+                                     </div>
+                                 </div>
+                             ))}
+                         </div>
+                     )}
+                  </div>
+
+                  {/* Loans Section */}
+                  <div className="mt-8">
+                     <h3 className="text-lg font-bold mb-4 uppercase tracking-wider text-slate-500 border-b border-slate-100 pb-2">Active Loans</h3>
+                     {(!account.loans || account.loans.length === 0) ? (
+                         <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 text-center text-slate-500 text-sm">No active loans found for this user.</div>
+                     ) : (
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                             {account.loans.map((loan, idx) => (
+                                 <div key={idx} className="border border-slate-200 rounded-xl p-4 flex items-center gap-4">
+                                     <div className="p-3 rounded-lg bg-emerald-50 text-emerald-600">
+                                         <FileText className="w-6 h-6" />
+                                     </div>
+                                     <div className="flex-1">
+                                         <p className="font-bold text-slate-800 capitalize">{loan.loanPurpose} Loan</p>
+                                         <p className="font-mono text-sm text-slate-500">ID: {loan.loan_id}</p>
+                                     </div>
+                                     <div className="text-right">
+                                         <p className="font-bold text-lg text-emerald-600">₹{loan.loanAmount?.toLocaleString()}</p>
+                                         <span className={`text-xs font-bold px-2 py-1 rounded uppercase tracking-wider ${loan.status === 'Approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-700'}`}>{loan.status}</span>
+                                     </div>
+                                 </div>
+                             ))}
+                         </div>
+                     )}
                   </div>
                 </div>
+              </div>
               )}
 
               {/* --- MANAGE STATUS TAB --- */}
@@ -314,7 +381,10 @@ const ManagerAccountManager = () => {
                               <div>
                                 <p className="font-bold text-lg text-slate-900">Suspicious Transfer Attempt</p>
                                 <p className="text-md text-slate-600">To Account: <span className="font-mono bg-slate-100 px-2 py-1 rounded text-sm font-semibold">{txn.toaccount}</span></p>
-                                <p className="text-sm mt-2 text-slate-400 flex items-center"><Info size={14} className="mr-1"/> {new Date(txn.createdAt).toLocaleString()}</p>
+                                <div className="flex flex-col mt-2 space-y-1">
+                                  <p className="text-xs text-slate-400 flex items-center"><Info size={14} className="mr-1"/> ID: <span className="font-mono ml-1">{txn._id}</span></p>
+                                  <p className="text-xs text-slate-400 flex items-center"><Info size={14} className="mr-1"/> {new Date(txn.createdAt).toLocaleString()}</p>
+                                </div>
                               </div>
                             </div>
                             <div className="flex flex-row md:flex-col items-center justify-between md:items-end w-full md:w-auto p-4 md:p-0 bg-slate-50 md:bg-transparent rounded-lg">

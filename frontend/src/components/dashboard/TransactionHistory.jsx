@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import axios from 'axios';
+﻿import { useState, useEffect } from 'react';
+import axios from '../../api/axiosInstance';
 import { History, ArrowDownLeft, ArrowUpRight, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 import LottiePackage from "lottie-react";
@@ -13,13 +13,12 @@ const TransactionHistory = () => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const token = localStorage.getItem("token") || cookieStore?.get?.("token")?.value;
-  const config = { headers: { Authorization: `Bearer ${token}` } };
+ 
 
   useEffect(() => {
     const fetchAccounts = async () => {
       try {
-        const res = await axios.get('http://localhost:4000/api/accounts/user/getallaccount', config);
+        const res = await axios.get('/api/accounts/user/getallaccount');
         if (res.data.success && res.data.accounts.length > 0) {
           setAccounts(res.data.accounts);
           setSelectedAccount(res.data.accounts[0].accountNumber);
@@ -37,7 +36,7 @@ const TransactionHistory = () => {
     const fetchHistory = async () => {
       try {
         setLoading(true);
-        const res = await axios.get(`http://localhost:4000/api/intra/transaction_history/${selectedAccount}`, config);
+        const res = await axios.get(`/api/user/transaction_history/${selectedAccount}`);
         if (res.data.success) {
           setTransactions(res.data.transactions);
         }
@@ -97,6 +96,7 @@ const TransactionHistory = () => {
               <thead>
                 <tr className="border-b border-slate-200/60 bg-slate-50/50 backdrop-blur-sm sticky top-0 z-10">
                   <th className="py-5 px-6 font-semibold text-slate-600 text-sm">Type</th>
+                  <th className="py-5 px-6 font-semibold text-slate-600 text-sm">Transaction ID</th>
                   <th className="py-5 px-6 font-semibold text-slate-600 text-sm">Details</th>
                   <th className="py-5 px-6 font-semibold text-slate-600 text-sm">Date & Time</th>
                   <th className="py-5 px-6 font-semibold text-slate-600 text-sm">Status</th>
@@ -112,14 +112,29 @@ const TransactionHistory = () => {
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isSent ? 'bg-rose-50 text-rose-500' : 'bg-emerald-50 text-emerald-500'}`}>
                           {isSent ? <ArrowUpRight className="w-5 h-5" /> : <ArrowDownLeft className="w-5 h-5" />}
                         </div>
+                        {txn.transferType && txn.transferType !== 'Normal' && (
+                           <div className="text-[10px] font-bold text-slate-400 text-center mt-1 uppercase tracking-wider">{txn.transferType}</div>
+                        )}
+                      </td>
+                      <td className="py-4 px-6 flex flex-col gap-1 items-start">
+                        <span className="font-mono text-xs font-medium text-indigo-600 bg-indigo-50 border border-indigo-100 px-2.5 py-1 rounded-md tracking-wider uppercase inline-block">
+                          {txn.transactionId || 'N/A'}
+                        </span>
+                        {txn.referenceId && (
+                           <span className="font-mono text-[10px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded tracking-wider uppercase">
+                             RRN: {txn.referenceId}
+                           </span>
+                        )}
                       </td>
                       <td className="py-4 px-6">
-                        <p className="font-semibold text-slate-800">{isSent ? 'Transfer To' : 'Received From'}</p>
+                        <p className={`font-semibold ${isSent ? 'text-rose-600' : 'text-emerald-600'}`}>{isSent ? 'Transfer To' : 'Received From'}</p>
                         <p className="text-sm text-slate-500 font-mono mt-0.5">{isSent ? txn.toaccount : txn.fromaccount}</p>
                       </td>
                       <td className="py-4 px-6">
-                        <p className="text-slate-800">{txn.paymentDate}</p>
-                        <p className="text-sm text-slate-500">{txn.paymentTime}</p>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-sm font-medium text-slate-700">{txn.paymentDate}</span>
+                          <span className="text-xs font-mono text-sky-600 bg-sky-50 px-2 py-0.5 rounded-md w-fit border border-sky-100">{txn.paymentTime}</span>
+                        </div>
                       </td>
                       <td className="py-4 px-6">
                         <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
@@ -131,7 +146,7 @@ const TransactionHistory = () => {
                         </span>
                       </td>
                       <td className="py-4 px-6 text-right">
-                        <span className={`font-bold text-lg ${isSent ? 'text-slate-800' : 'text-emerald-600'}`}>
+                        <span className={`font-bold text-lg ${isSent ? 'text-rose-600' : 'text-emerald-600'}`}>
                           {isSent ? '-' : '+'}₹{txn.amount?.toLocaleString()}
                         </span>
                       </td>
@@ -148,3 +163,4 @@ const TransactionHistory = () => {
 };
 
 export default TransactionHistory;
+

@@ -12,7 +12,7 @@ exports.defaultprobablity = async (features) =>{
         const response = await axios.post(`${baseurl}/predict_default`, features, { timeout: 30000 }); 
 
         return {
-            defaultProbability: response.data.defaultProbability
+            defaultProbability: response.data.default_probability
         };
 
     }

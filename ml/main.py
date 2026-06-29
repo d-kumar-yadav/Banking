@@ -134,7 +134,7 @@ async def predict_default(data: loanapplicationdata):
         data.total_credit_limit
     ]]
     
-    prob_default = loan_model.predict_proba(features)[0][1]
+    prob_default = loan_model.predict_proba(features)[0][0]
     return {
         "default_probability": round(float(prob_default), 3),
         "risk_level": "HIGH" if prob_default > 0.7 else "MEDIUM" if prob_default > 0.4 else "LOW",

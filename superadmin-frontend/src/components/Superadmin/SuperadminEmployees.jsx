@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Plus, Edit2, Trash2, X, Users } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Users, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const SuperadminEmployees = () => {
@@ -12,6 +12,9 @@ const SuperadminEmployees = () => {
   const [isAddPopupOpen, setIsAddPopupOpen] = useState(false);
   const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
+  
+  // Search state
+  const [searchId, setSearchId] = useState('');
   
   // Form data
   const [selectedEmployee, setSelectedEmployee] = useState(null);
@@ -46,6 +49,29 @@ const SuperadminEmployees = () => {
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    if (!searchId.trim()) {
+      fetchData();
+      return;
+    }
+    setLoading(true);
+    try {
+      const response = await axios.get(`http://localhost:4000/api/employee/get_employee/${searchId.trim()}`, { withCredentials: true });
+      if (response.data.success && response.data.employee) {
+         setEmployees([response.data.employee]);
+      } else {
+         setEmployees([]);
+         toast.error('Employee not found');
+      }
+    } catch (error) {
+      setEmployees([]);
+      toast.error(error.response?.data?.message || 'Employee not found');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleAddSubmit = async (e) => {
@@ -160,16 +186,35 @@ const SuperadminEmployees = () => {
           <h1 className="text-2xl font-bold text-slate-800">Staff Management</h1>
           <p className="text-slate-500">Manage bank employees and their roles.</p>
         </div>
-        <button 
-          onClick={() => {
-            setFormData({ name: '', email: '', password: '', phone: '', role: 'Employee', branchid: '' });
-            setIsAddPopupOpen(true);
-          }}
-          className="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-colors shadow-sm"
-        >
-          <Plus size={18} />
-          <span>Add Staff</span>
-        </button>
+        <div className="flex items-center space-x-4">
+          <form onSubmit={handleSearch} className="flex items-center bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
+             <input 
+               type="text" 
+               value={searchId} 
+               onChange={(e)=>setSearchId(e.target.value)} 
+               placeholder="Search by Employee ID..." 
+               className="px-3 py-2 text-sm focus:outline-none focus:bg-slate-50 w-52 transition-colors" 
+             />
+             <button type="submit" className="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-2 transition-colors border-l border-slate-200" title="Search">
+                <Search size={18} />
+             </button>
+             {searchId && (
+               <button type="button" onClick={() => { setSearchId(''); fetchData(); }} className="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-2 transition-colors border-l border-slate-200" title="Clear Search">
+                  <X size={18} />
+               </button>
+             )}
+          </form>
+          <button 
+            onClick={() => {
+              setFormData({ name: '', email: '', password: '', phone: '', role: 'Employee', branchid: '' });
+              setIsAddPopupOpen(true);
+            }}
+            className="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-colors shadow-sm"
+          >
+            <Plus size={18} />
+            <span>Add Staff</span>
+          </button>
+        </div>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">

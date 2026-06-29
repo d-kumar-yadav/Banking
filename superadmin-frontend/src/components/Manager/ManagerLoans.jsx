@@ -9,15 +9,15 @@ const ManagerLoans = () => {
   const [loading, setLoading] = useState(true);
   const [selectedLoan, setSelectedLoan] = useState(null);
   const [activeTab, setActiveTab] = useState('review');
+  const [assessedLoans, setAssessedLoans] = useState({});
+  const [isAssessing, setIsAssessing] = useState(false);
 
   const fetchLoans = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      const headers = { Authorization: `Bearer ${token}` };
       const [reviewRes, allRes] = await Promise.all([
-        axios.get('http://localhost:4000/api/loan/Manager/review', { headers, withCredentials: true }),
-        axios.get('http://localhost:4000/api/loan/Manager/all', { headers, withCredentials: true })
+        axios.get('http://localhost:4000/api/loan/Manager/review', { withCredentials: true }),
+        axios.get('http://localhost:4000/api/loan/Manager/all', { withCredentials: true })
       ]);
       setLoans(reviewRes.data.reviewloan || []);
       setAllLoans(allRes.data.loans || []);
@@ -32,8 +32,7 @@ const ManagerLoans = () => {
 
   const handleApprove = async (loanId) => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(`http://localhost:4000/api/loan/Manager/approve/${loanId}`, {}, { headers: { Authorization: `Bearer ${token}` }, withCredentials: true });
+      await axios.post(`http://localhost:4000/api/loan/Manager/approve/${loanId}`, {}, { withCredentials: true });
       toast.success('Loan approved successfully');
       fetchLoans(); setSelectedLoan(null);
     } catch (error) { toast.error(error.response?.data?.message || 'Failed to approve loan'); }
@@ -41,8 +40,7 @@ const ManagerLoans = () => {
 
   const handleReject = async (loanId) => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(`http://localhost:4000/api/loan/Manager/reject/${loanId}`, {}, { headers: { Authorization: `Bearer ${token}` }, withCredentials: true });
+      await axios.post(`http://localhost:4000/api/loan/Manager/reject/${loanId}`, {}, { withCredentials: true });
       toast.success('Loan request rejected');
       fetchLoans(); setSelectedLoan(null);
     } catch (error) { toast.error(error.response?.data?.message || 'Failed to reject loan'); }
@@ -95,8 +93,8 @@ const ManagerLoans = () => {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200">
-                  {['Loan ID','User Name','Amount','Purpose','Default Risk','Status','Actions'].map((h, i) => (
-                    <th key={h} className={`p-4 font-semibold text-slate-600 text-sm uppercase tracking-wider ${i === 6 ? 'text-right' : ''}`}>{h}</th>
+                  {['Ref / Loan ID','User Name','Amount','Purpose','Status','Actions'].map((h, i) => (
+                    <th key={h} className={`p-4 font-semibold text-slate-600 text-sm uppercase tracking-wider ${i === 5 ? 'text-right' : ''}`}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -107,11 +105,6 @@ const ManagerLoans = () => {
                     <td className="p-4 font-medium text-slate-900">{loan.user?.name || 'Unknown User'}</td>
                     <td className="p-4 font-bold text-slate-900">₹{loan.loanAmount?.toLocaleString()}</td>
                     <td className="p-4 text-slate-700">{loan.loanPurpose}</td>
-                    <td className="p-4">
-                      {loan.defaultProbability != null
-                        ? <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getRiskColor(loan.defaultProbability)}`}>{(loan.defaultProbability * 100).toFixed(1)}% Risk</span>
-                        : <span className="text-slate-400 font-medium">N/A</span>}
-                    </td>
                     <td className="p-4">
                       <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
                         loan.status === 'Approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200/50' :
@@ -139,7 +132,7 @@ const ManagerLoans = () => {
             <div className="flex justify-between items-center p-6 border-b border-slate-100 bg-slate-50/50 sticky top-0 z-10">
               <div>
                 <h2 className="text-2xl font-bold text-slate-900">Loan Application Details</h2>
-                <p className="text-slate-500 text-sm mt-1">ID: <span className="font-mono bg-slate-200/50 px-1.5 py-0.5 rounded text-slate-700">{selectedLoan.loan_id}</span></p>
+                <p className="text-slate-500 text-sm mt-1">Ref / ID: <span className="font-mono bg-slate-200/50 px-1.5 py-0.5 rounded text-slate-700">{selectedLoan.loan_id}</span></p>
               </div>
               <button onClick={() => setSelectedLoan(null)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"><X size={24} /></button>
             </div>
@@ -181,11 +174,55 @@ const ManagerLoans = () => {
                   <div><p className="text-xs font-semibold uppercase tracking-wider text-emerald-600 mb-1">Term</p><p className="font-bold text-slate-900">{selectedLoan.loanTerm} Months</p></div>
                   <div><p className="text-xs font-semibold uppercase tracking-wider text-emerald-600 mb-1">Purpose</p><p className="font-medium text-slate-900">{selectedLoan.loanPurpose}</p></div>
                 </div>
-                <div className={`p-5 rounded-xl border ${getRiskColor(selectedLoan.defaultProbability)}`}>
-                  <div className="flex items-center space-x-2 mb-3"><AlertTriangle size={24} /><h4 className="font-bold text-lg">AI Risk Assessment</h4></div>
-                  <p className="text-4xl font-black mb-1">{selectedLoan.defaultProbability != null ? (selectedLoan.defaultProbability * 100).toFixed(1) : 'N/A'}%</p>
-                  <p className="text-xs font-bold uppercase tracking-wider opacity-80">Probability of Default</p>
-                </div>
+
+                {(selectedLoan.status === 'Active' || selectedLoan.status === 'Closed') && (
+                  <div className="p-4 rounded-xl space-y-4 bg-indigo-50 border-2 border-indigo-100">
+                    <h4 className="font-bold text-indigo-900">Repayment Status</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div><p className="text-xs font-semibold uppercase tracking-wider text-indigo-600 mb-1">Monthly EMI</p><p className="font-bold text-slate-900">₹{selectedLoan.monthlyEMI?.toLocaleString()}</p></div>
+                      <div><p className="text-xs font-semibold uppercase tracking-wider text-indigo-600 mb-1">EMIs Paid</p><p className="font-bold text-slate-900">{Math.round((selectedLoan.totalRepaymentAmount - selectedLoan.remainingBalance) / selectedLoan.monthlyEMI)} / {selectedLoan.loanTerm}</p></div>
+                      <div><p className="text-xs font-semibold uppercase tracking-wider text-indigo-600 mb-1">Remaining Bal</p><p className="font-bold text-rose-600">₹{selectedLoan.remainingBalance?.toLocaleString()}</p></div>
+                      <div><p className="text-xs font-semibold uppercase tracking-wider text-indigo-600 mb-1">Next Due Date</p><p className="font-bold text-slate-900">{new Date(selectedLoan.nextDueDate).toLocaleDateString()}</p></div>
+                    </div>
+                  </div>
+                )}
+                {selectedLoan.status === 'Review_Required' && (
+                  <div className={`p-5 rounded-xl border transition-all duration-500 ${assessedLoans[selectedLoan.loan_id || selectedLoan.reference_number] ? getRiskColor(selectedLoan.defaultProbability) : 'bg-slate-50 border-slate-200'}`}>
+                    <div className="flex items-center space-x-2 mb-3">
+                      <AlertTriangle size={24} className={assessedLoans[selectedLoan.loan_id || selectedLoan.reference_number] ? '' : 'text-slate-400'} />
+                      <h4 className="font-bold text-lg">AI Risk Assessment</h4>
+                    </div>
+                    
+                    {!assessedLoans[selectedLoan.loan_id || selectedLoan.reference_number] ? (
+                      <div className="flex flex-col items-start space-y-3">
+                        <p className="text-sm text-slate-500">The ML model has generated a default probability prediction for this application. Click below to reveal the assessment.</p>
+                        <button 
+                          onClick={() => {
+                            setIsAssessing(true);
+                            setTimeout(() => {
+                              setAssessedLoans(prev => ({...prev, [selectedLoan.loan_id || selectedLoan.reference_number]: true}));
+                              setIsAssessing(false);
+                            }, 1000);
+                          }}
+                          disabled={isAssessing}
+                          className="px-4 py-2 bg-[#5B0A1C] text-white font-bold rounded-lg hover:bg-rose-900 transition-colors flex items-center space-x-2 disabled:opacity-50"
+                        >
+                          {isAssessing ? (
+                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                          ) : (
+                            <AlertTriangle size={18} />
+                          )}
+                          <span>{isAssessing ? 'Running Analysis...' : 'Get Loan Default Probability'}</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="animate-in fade-in zoom-in duration-500">
+                        <p className="text-4xl font-black mb-1">{selectedLoan.defaultProbability != null ? (selectedLoan.defaultProbability * 100).toFixed(1) : 'N/A'}%</p>
+                        <p className="text-xs font-bold uppercase tracking-wider opacity-80">Probability of Default</p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
             

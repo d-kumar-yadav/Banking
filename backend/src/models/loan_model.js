@@ -13,12 +13,12 @@ const loanschema = new mongoose.Schema({
     creditScoreAtApplication: { type: Number, required: true },
 
     // DATA COLLECTED FROM THE LOAN FORM 
-    maritalStatus: { type: String, enum: ["Single", "Married", "Divorced"], required: true },
-    educationLevel: { type: String, enum: ["High School", "Bachelor", "Master", "PhD"], required: true },
-    employmentStatus: { type: String, enum: ["Employed", "Self-Employed", "Unemployed"], required: true },
+    maritalStatus: { type: String, enum: ["Divorced", "Married", "Single", "Widowed"], required: true },
+    educationLevel: { type: String, enum: ["Bachelor's", "High School", "Master's", "Other", "PhD"], required: true },
+    employmentStatus: { type: String, enum: ["Employed", "Retired", "Self-employed", "Student", "Unemployed"], required: true },
     annualIncome: { type: Number, required: true }, // Calculated as monthly * 12 or user input
     loanAmount: { type: Number, required: true },
-    loanPurpose: { type: String, enum: ["Personal", "Home", "Education", "Automobile", "Medical"], required: true },
+    loanPurpose: { type: String, enum: ["Business", "Car", "Debt consolidation", "Education", "Home", "Medical", "Other", "Vacation"], required: true },
     loanTerm: { type: Number, required: true }, // in months
     debtToIncomeRatio: { type: Number, required: true }, // Calculated field
 
@@ -26,15 +26,22 @@ const loanschema = new mongoose.Schema({
     defaultProbability: { type: Number, default: 0 }, 
     status: { 
         type: String, 
-        enum: ["Applied", "Review_Required", "Approved", "Rejected", "Disbursed"], 
+        enum: ["Applied", "Review_Required", "Approved", "Rejected", "Disbursed", "Active", "Closed", "Defaulted"], 
         default: "Applied" 
     },
-    adminRemarks: { type: String }
+    adminRemarks: { type: String },
+    
+    // LOAN REPAYMENT FIELDS
+    interestRate: { type: Number, default: 10 }, // Default 10% annual
+    totalRepaymentAmount: { type: Number }, // Principal + Interest
+    remainingBalance: { type: Number },
+    monthlyEMI: { type: Number },
+    nextDueDate: { type: Date }
 
 }, { timestamps: true });
 
 // Auto-increment logic for Loan ID (LN10001...)
-loanschema.pre("validate", async function (next) {
+loanschema.pre("validate", async function () {
     if (this.isNew && !this.loan_id) {
         try {
             const counter = await countermodel.findOneAndUpdate(
@@ -42,13 +49,13 @@ loanschema.pre("validate", async function (next) {
                 { $inc: { seq: 1 } },
                 { returnDocument: 'after', upsert: true }
             );
-            this.loan_id = "LN" + counter.seq;
-            next();
+            this.loan_id = "LN" + String(counter.seq).padStart(8, '0');
+            
         } catch (error) {
-            next(error);
+            console.error("Error in counter update:", error);
+         
+          throw error;
         }
-    } else {
-        next();
     }
 });
 

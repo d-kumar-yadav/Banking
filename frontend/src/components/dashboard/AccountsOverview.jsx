@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
-import { Plus, CreditCard, ArrowUpRight, ArrowDownRight, Wallet, FileText, Clock, Phone, MapPin, CheckCircle, AlertCircle } from 'lucide-react';
+import axios from '../../api/axiosInstance';
+import { Plus, CreditCard, ArrowUpRight, ArrowDownRight, Wallet, FileText, Clock, Phone, MapPin, CheckCircle, AlertCircle, Building, Mail } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Loader from '../Loader';
 
@@ -50,7 +50,7 @@ const AccountsOverview = () => {
     }
 
     try {
-      await axios.post("http://localhost:4000/api/auth/send-otp", { phone: newAccountData.phone });
+      await axios.post("/api/auth/send-otp", { phone: newAccountData.phone });
       setIsOtpSent(true);
       setOtpTimer(30);
       toast.success("OTP sent successfully!");
@@ -66,7 +66,7 @@ const AccountsOverview = () => {
     try {
       setLoading(true);
     
-      const res = await axios.get('http://localhost:4000/api/accounts/user/getallaccount', { withCredentials: true });
+      const res = await axios.get('/api/accounts/user/getallaccount', { withCredentials: true });
       if (res.data.success) {
         setAccounts(res.data.accounts);
         if (res.data.accounts.length === 1) {
@@ -76,7 +76,7 @@ const AccountsOverview = () => {
         // Fetch balances for each account concurrently using Promise.all
         const balancePromises = res.data.accounts.map(async (acc) => {
           try {
-            const balRes = await axios.get(`http://localhost:4000/api/accounts/user/balance/${acc.accountNumber}`, { withCredentials: true });
+            const balRes = await axios.get(`/api/accounts/user/balance/${acc.accountNumber}`, { withCredentials: true });
             if (balRes.data.success) {
               return [acc.accountNumber, balRes.data.balance];
             }
@@ -106,7 +106,7 @@ const AccountsOverview = () => {
   const handleApplySubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:4000/api/accounts/user/createaccount', newAccountData, { withCredentials: true });
+      const res = await axios.post('/api/accounts/user/createaccount', newAccountData, { withCredentials: true });
       if (res.data.success) {
         toast.success(res.data.message);
         setApplyaccount(false);
@@ -114,7 +114,19 @@ const AccountsOverview = () => {
 
       }
     } catch (err) {
+      setNewAccountData({ pan_id: '',
+    adhar_id: '',
+    address: '',
+    phone: '',
+    otp: '',
+    account_type: 'Savings',
+    pan_image: 'placeholder_pan_url', // Using placeholders since we aren't handling real file uploads in this demo
+    adhar_image: 'placeholder_adhar_url',
+    signature: 'placeholder_signature_url',
+    image: 'placeholder_user_image_url',
+    branchCode: '' });
       toast.error(err.response?.data?.message || 'Failed to create account');
+
     }
   };
 
@@ -124,7 +136,7 @@ const AccountsOverview = () => {
         setLoading(true);
         try {
          
-          const res = await axios.get('http://localhost:4000/api/accounts/user/appliedaccounts', { withCredentials: true });
+          const res = await axios.get('/api/accounts/user/appliedaccounts', { withCredentials: true });
           if (res.data.success) {
             setUserAppliedaccounts(res.data.appliedaccounts);
           }
@@ -190,6 +202,28 @@ const AccountsOverview = () => {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Quick Actions Row */}
+      <div className="grid grid-cols-3 gap-4 mb-8">
+          <button onClick={() => window.location.href='/Dashboard/transfer'} className="bg-white border border-slate-200 p-4 rounded-2xl flex flex-col items-center justify-center gap-2 hover:shadow-md hover:border-[#5B0A1C]/30 transition-all group">
+              <div className="w-10 h-10 bg-rose-50 rounded-full flex items-center justify-center group-hover:bg-[#5B0A1C] transition-colors">
+                  <ArrowUpRight className="w-5 h-5 text-[#5B0A1C] group-hover:text-white" />
+              </div>
+              <span className="text-sm font-bold text-slate-700">Send Money</span>
+          </button>
+          <button className="bg-white border border-slate-200 p-4 rounded-2xl flex flex-col items-center justify-center gap-2 hover:shadow-md hover:border-[#5B0A1C]/30 transition-all group cursor-not-allowed opacity-70">
+              <div className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center transition-colors">
+                  <FileText className="w-5 h-5 text-slate-500" />
+              </div>
+              <span className="text-sm font-bold text-slate-500">Pay Bills</span>
+          </button>
+          <button onClick={() => window.location.href='/Dashboard/history'} className="bg-white border border-slate-200 p-4 rounded-2xl flex flex-col items-center justify-center gap-2 hover:shadow-md hover:border-[#5B0A1C]/30 transition-all group">
+              <div className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center group-hover:bg-[#5B0A1C] transition-colors">
+                  <Clock className="w-5 h-5 text-slate-500 group-hover:text-white" />
+              </div>
+              <span className="text-sm font-bold text-slate-700">History</span>
+          </button>
       </div>
 
       <div className="flex gap-4 border-b border-slate-200">
@@ -302,8 +336,24 @@ const AccountsOverview = () => {
                        <p className="text-xs font-semibold text-slate-500 flex items-center gap-1.5"><Phone className="w-3.5 h-3.5" /> Phone Number</p>
                        <p className="text-base text-slate-900 font-semibold">{account.user?.phone || 'N/A'}</p>
                     </div>
-                    <div className="flex flex-col gap-1.5 sm:col-span-2 lg:col-span-2">
-                       <p className="text-xs font-semibold text-slate-500 flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> Residential Address</p>
+                    <div className="flex flex-col gap-1.5">
+                       <p className="text-xs font-semibold text-slate-500 flex items-center gap-1.5"><Building className="w-3.5 h-3.5" /> Branch Applied</p>
+                       <p className="text-base text-slate-900 font-semibold">{account.branchCode?.branchName || 'N/A'} <span className="text-sm font-normal text-slate-500">({account.branchCode?.branchCode || 'N/A'})</span></p>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                       <p className="text-xs font-semibold text-slate-500 flex items-center gap-1.5"><Phone className="w-3.5 h-3.5" /> Branch Phone</p>
+                       <p className="text-base text-slate-900 font-semibold">{account.branchCode?.branchPhone || 'N/A'}</p>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                       <p className="text-xs font-semibold text-slate-500 flex items-center gap-1.5"><Mail className="w-3.5 h-3.5" /> Branch Email</p>
+                       <p className="text-base text-slate-900 font-semibold">{account.branchCode?.branchEmail || 'N/A'}</p>
+                    </div>
+                    <div className="flex flex-col gap-1.5 sm:col-span-2 lg:col-span-3">
+                       <p className="text-xs font-semibold text-slate-500 flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> Branch Address</p>
+                       <p className="text-base text-slate-900 font-semibold truncate hover:text-clip hover:whitespace-normal transition-all" title={account.branchCode?.address}>{account.branchCode?.address || 'N/A'}</p>
+                    </div>
+                    <div className="flex flex-col gap-1.5 sm:col-span-2 lg:col-span-3 border-t border-slate-200/60 pt-4 mt-2">
+                       <p className="text-xs font-semibold text-slate-500 flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> Your Residential Address</p>
                        <p className="text-base text-slate-900 font-semibold truncate hover:text-clip hover:whitespace-normal transition-all" title={account.user?.address}>{account.user?.address || 'N/A'}</p>
                     </div>
                   </div>
@@ -433,3 +483,4 @@ const AccountsOverview = () => {
 };
 
 export default AccountsOverview;
+

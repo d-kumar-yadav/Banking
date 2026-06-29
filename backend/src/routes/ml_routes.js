@@ -6,4 +6,5 @@ const {authMiddleware} = require("../middleware/auth_middleware");
 
 router.post("/simulate-credit", authMiddleware, simulateCreditScore); 
 
+
 module.exports = router;

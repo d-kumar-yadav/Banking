@@ -74,7 +74,7 @@
         status: { type: String, enum: ['Active', 'Blocked', 'Expired'], default: 'Active' }
     }],
 
-    branchCode: { type: mongoose.Schema.Types.ObjectId, ref: 'Branch' }
+    branch: { type: mongoose.Schema.Types.ObjectId, ref: 'Branch' }
 
  } ,
 {

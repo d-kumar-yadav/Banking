@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Mail, Lock, Phone, ArrowRight, User, Key, Users } from 'lucide-react';
+import { Mail, Lock, Phone, ArrowRight, User, Key, Users, Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../api/axiosInstance';
 import toast from 'react-hot-toast';
 
 const SignupForm = ({ setislogin }) => {
@@ -16,6 +16,7 @@ const SignupForm = ({ setislogin }) => {
   const [isAgreed, setIsAgreed] = useState(false);
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [otpTimer, setOtpTimer] = useState(0);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -41,7 +42,7 @@ const SignupForm = ({ setislogin }) => {
       if (formData.email) payload.email = formData.email;
       if (formData.phone) payload.phone = formData.phone;
 
-      await axios.post("http://localhost:4000/api/auth/send-otp", payload);
+      await axios.post("/api/auth/send-otp", payload);
       setIsOtpSent(true);
       setOtpTimer(30);
       toast.success("OTP sent successfully!");
@@ -54,7 +55,7 @@ const SignupForm = ({ setislogin }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post("http://localhost:4000/api/auth/register", formData);
+      const response = await axios.post("/api/auth/register", formData);
       if (response.status === 200 || response.status === 201) {
         toast.success("Successfully Registered!");
 
@@ -192,14 +193,21 @@ const SignupForm = ({ setislogin }) => {
               <Lock size={18} />
             </div>
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               name="password"
               required
               value={formData.password}
               onChange={handleChange}
-              className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5B0A1C]/20 focus:border-[#5B0A1C] transition-all"
+              className="w-full pl-11 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5B0A1C]/20 focus:border-[#5B0A1C] transition-all"
               placeholder="••••••••"
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-[#5B0A1C] transition-colors"
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
           </div>
         </div>
       </div>
@@ -232,3 +240,4 @@ const SignupForm = ({ setislogin }) => {
 };
 
 export default SignupForm;
+

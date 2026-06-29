@@ -15,7 +15,7 @@ const { sms_payment_notification } = require("../service/sms");
 exports.transactioncontroller = async(req,res)=>{
 
     try {
-        const {fromaccount , toaccount , amount , idempotencykey}= req.body;
+        const {fromaccount , toaccount , amount , idempotencykey, transferType = "Normal"}= req.body;
 
         // step 1: validate the request body
         if(!fromaccount || !toaccount || !amount || !idempotencykey){
@@ -24,6 +24,19 @@ exports.transactioncontroller = async(req,res)=>{
                 message:"All fields are required"
             })
         }       
+
+        // validate transfer limits
+        if (transferType === "Normal") {
+            if (amount >= 100000) {
+                return res.status(400).json({ success: false, message: "Normal transfer limit is strictly less than 1,00,000 INR." });
+            }
+        } else if (transferType === "NEFT" || transferType === "RTGS") {
+            if (amount < 100000 || amount > 500000) {
+                return res.status(400).json({ success: false, message: `${transferType} transfer must be between 1,00,000 and 5,00,000 INR.` });
+            }
+        } else {
+            return res.status(400).json({ success: false, message: "Invalid transfer type." });
+        }
 
         // explicitly select the phone field since it defaults to select: false in the schema
         const userfromaccount = await accountmodel.findOne({ accountNumber: fromaccount }).populate({
@@ -113,12 +126,18 @@ exports.transactioncontroller = async(req,res)=>{
         };
         console.log("Fraud features sent to ML:", fraudFeatures);
 
+        let fraudResult = { risk_level: 'LOW', fraud_score: 0 };
         try {
             console.log(" Calling ML fraud service...");
-            const fraudResult = await getFraudScore(fraudFeatures);
+            fraudResult = await getFraudScore(fraudFeatures);
             console.log(`Fraud Check Result: ${fraudResult.risk_level} (Score: ${fraudResult.fraud_score})`);
-            
-            if (fraudResult.risk_level === 'HIGH') {
+        } catch (fraudError) {
+            console.error(" Fraud check FAILED:", fraudError.message || fraudError);
+            console.error("ML service likely down - proceeding with transaction");
+        }
+
+        if (fraudResult.risk_level === 'HIGH') {
+            try {
                 // Freeze account immediately
                 await accountmodel.findByIdAndUpdate(userfromaccount._id, { status: "Frozen" });
                  
@@ -128,11 +147,15 @@ exports.transactioncontroller = async(req,res)=>{
                         message: "Your account has been frozen due to suspicious activity. Please contact the bank."
                     });
                 }
-                await emailservice(
-                    userfromaccount.user.email,
-                    "Account Frozen",
-                    `Hello ${userfromaccount.user.name},\n\nYour account with Account Number ${userfromaccount.accountNumber} has been frozen due to suspicious activity. Please visit your bank for further assistance.`
-                );
+                try {
+                    await emailservice(
+                        userfromaccount.user.email,
+                        "Account Frozen",
+                        `Hello ${userfromaccount.user.name},\n\nYour account with Account Number ${userfromaccount.accountNumber} has been frozen due to suspicious activity. Please visit your bank for further assistance.`
+                    );
+                } catch (err) {
+                    console.error("Failed to send frozen account email:", err.message);
+                }
 
                 // Record the blocked transaction attempt
                 await transactionmodel.create({
@@ -142,18 +165,17 @@ exports.transactioncontroller = async(req,res)=>{
                     idempotencykey,
                     status: "flagged",
                     isFraud: true,
-                    fraudScore: fraudResult.fraud_score,
-                    isExternal: isExternal
+                    fraudScore: fraudResult.fraud_score
                 });
 
                 return res.status(403).json({
                     success: false,
                     message: "Transaction blocked due to suspicious activity. Your account has been frozen."
                 });
+            } catch (blockError) {
+                console.error("Error during blocking transaction:", blockError);
+                return res.status(500).json({ success: false, message: "Internal server error during fraud prevention" });
             }
-        } catch (fraudError) {
-            console.error(" Fraud check FAILED:", fraudError.message || fraudError);
-            console.error("ML service likely down - proceeding with transaction");
         }
       
         const session= await mongoose.startSession();
@@ -169,9 +191,17 @@ exports.transactioncontroller = async(req,res)=>{
                 toaccount: toaccount, // Replaced usertoaccount.accountNumber to avoid crash if it doesn't exist
                 amount,
                 idempotencykey,
+                transferType,
                 status: isExternal ? "Processing_External" : "Pending",
                 isExternal: isExternal
             } ) 
+            
+            // SIMULATE NEFT DELAY PROTOTYPE (10 SECONDS)
+            if (transferType === "NEFT") {
+                console.log("Simulating NEFT batch clearance delay (10s)...");
+                await new Promise(r => setTimeout(r, 10000));
+                console.log("NEFT batch cleared.");
+            }
 
             // step -6
             const debitledgerentry= await ledgermodel.create([{
@@ -252,10 +282,19 @@ exports.transactioncontroller = async(req,res)=>{
         const senderPhone = userfromaccount.user.phone;
         const currentDate = new Date().toLocaleDateString();
         const currentTime = new Date().toLocaleTimeString();
-        await email_payment_notification(senderEmail, senderName, amount, toaccount, currentDate, currentTime, transaction._id, true);
+        
+        try {
+            await email_payment_notification(senderEmail, senderName, amount, toaccount, currentDate, currentTime, transaction._id, true);
+        } catch (err) {
+            console.error("Failed to send sender email notification:", err.message);
+        }
         
         if (senderPhone) {
-            await sms_payment_notification(senderPhone, senderName, amount, toaccount, true);
+            try {
+                await sms_payment_notification(senderPhone, senderName, amount, toaccount, true);
+            } catch (err) {
+                console.error("Failed to send sender SMS:", err.message);
+            }
         }
 
         // Send email notification to receiver only if it's an internal account  
@@ -263,10 +302,19 @@ exports.transactioncontroller = async(req,res)=>{
             const receiverEmail = usertoaccount.user.email;
             const receiverName = usertoaccount.user.name;
             const receiverPhone = usertoaccount.user.phone;
-            await email_payment_notification(receiverEmail, receiverName, amount, fromaccount, currentDate, currentTime, transaction._id, false);
+            
+            try {
+                await email_payment_notification(receiverEmail, receiverName, amount, fromaccount, currentDate, currentTime, transaction._id, false);
+            } catch (err) {
+                console.error("Failed to send receiver email notification:", err.message);
+            }
 
             if (receiverPhone) {
-                await sms_payment_notification(receiverPhone, receiverName, amount, fromaccount, false);
+                try {
+                    await sms_payment_notification(receiverPhone, receiverName, amount, fromaccount, false);
+                } catch (err) {
+                    console.error("Failed to send receiver SMS:", err.message);
+                }
             }
         }
 
@@ -278,6 +326,7 @@ exports.transactioncontroller = async(req,res)=>{
         });
 
     } catch(err){
+        
         console.error("Error in transaction controller", err);
         return res.status(500).json({
             success:false,
@@ -287,132 +336,7 @@ exports.transactioncontroller = async(req,res)=>{
 }
 
 
-// intial fund controller
-exports.intialfundcontroller =async (req,res)=>{
-    try{
- const{toaccount,amount, idempotencykey}= req.body;
- if(!toaccount || !amount || !idempotencykey){  
-         return res.status(400).json({
-            success:false,
-            message:"All fields are required"
-         })
-         
- }
-  const touseraccount= await accountmodel.findOne({ accountNumber: toaccount });
-  if(!touseraccount){
-    return res.status(404).json({
-        success:false,
-        message:"To account not found"
-    })
-  }
 
-  // Check for idempotency key to gracefully avoid duplicate transaction errors
-  const existtransaction = await transactionmodel.findOne({idempotencykey}); 
-  if(existtransaction){
-      if(existtransaction.status === "Completed"){
-          return res.status(200).json({
-              success:true,
-              message:"Initial fund already added successfully (Idempotent retry)",
-              transactionId: existtransaction._id
-          })
-      }
-
-      else if(existtransaction.status === "Pending"){
-          return res.status(400).json({
-              success:false,
-              message:"Transaction with this idempotency key is already in progress"
-          })
-      }
-
-      else if(existtransaction.status === "Failed"){
-          return res.status(400).json({
-              success:false,
-              message:"Transaction with this idempotency key has already failed ,retry again"
-          })
-      }
-      
-      else if(existtransaction.status === "Reversed"){
-          return res.status(400).json({
-              success:false,
-              message:"Transaction with this idempotency key has already been reversed , retry again"
-          })
-      }
-  }
-
-  const systemuseraccount= await accountmodel.findOne({
-    user:req.user._id
-  })
-  if(!systemuseraccount){
-    return res.status(404).json({
-        success:false,
-        message:"system  account not found"
-    })
-  
-  }
-
-  // create session
-   const session= await mongoose.startSession();
-        // create session
-        session.startTransaction();
-        // initiates the transaction on that session. like updates , delete ,insert
-
-        let transaction; // Declare here so it's accessible after try block
-
-        try {
-            transaction= new transactionmodel({
-                
-                fromaccount: systemuseraccount.accountNumber,
-                toaccount: touseraccount.accountNumber,
-                amount,
-                idempotencykey,
-                status:"Pending"
-            }  )
-
-         
-            const debitledgerentry= await ledgermodel.create([{
-                account: systemuseraccount.accountNumber,
-                amount:amount,
-                transaction:transaction._id,
-                type:"debit"
-            } ], {session}) 
-
-         
-            const creditledgerentry= await ledgermodel.create([{
-                account: touseraccount.accountNumber,
-                amount:amount,
-                transaction:transaction._id,
-                type:"credit"
-            }] , {session})
-
-            
-            transaction.status= "Completed";
-            await transaction.save({session});
-            await session.commitTransaction();
-        } catch (error) {
-            await session.abortTransaction();
-            throw error;
-        } finally {
-            
-            session.endSession();
-        }
-
-        // Send the successful response so the client doesn't hang!
-        return res.status(200).json({
-            success: true,
-            message: "Initial fund added successfully",
-            transactionId: transaction._id
-        });
-    }
-
-   catch(err){
-        console.error("Error in intial fund  controller", err);
-        return res.status(500).json({
-            success:false,
-            message:"Internal server error"
-        })
-    }
-
-}
 
 
 

@@ -11,7 +11,7 @@ const ManagerAccounts = () => {
   const fetchAccounts = async () => {
     try {
       setLoading(true);
-      // The backend securely identifies the Manager's branch from their auth token
+    
       const res = await axios.get('http://localhost:4000/api/accounts/Manager/pending-accounts', { withCredentials: true });
       setAccounts(res.data.pendingaccounts || []);
     } catch (error) {

@@ -33,7 +33,7 @@ async function sendEmail(to, subject, text, html) {
     console.log(`Email sent to ${to} with subject "${subject}"`);
   } catch (error) {
     console.error(`Error sending email to ${to}:`, error);
-    throw error; 
+    // Removed throw error; so the app doesn't crash if the Gmail token expires
   }
 
 }

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Mail, Lock, Phone, ArrowRight } from 'lucide-react';
+import { Mail, Lock, Phone, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../api/axiosInstance';
 import toast from 'react-hot-toast';
 
 const LoginForm = ({ setislogin }) => {
@@ -11,6 +11,7 @@ const LoginForm = ({ setislogin }) => {
     password: ''
   });
   const [loginMethod, setLoginMethod] = useState('email'); // 'email' or 'phone'
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -26,7 +27,7 @@ const LoginForm = ({ setislogin }) => {
     };
 
     try {
-      const response = await axios.post("http://localhost:4000/api/auth/login", payload);
+      const response = await axios.post("/api/auth/login", payload);
       if (response.status === 200) {
         const role= response.data.role;
         if (role !== 'customer') {
@@ -39,7 +40,7 @@ const LoginForm = ({ setislogin }) => {
         
         toast.success("Login Successful!");
         setislogin(true);
-       
+        localStorage.setItem('userId', response.data.userId);
         navigate("/Dashboard");
       }
     } catch (error) {
@@ -121,14 +122,21 @@ const LoginForm = ({ setislogin }) => {
             <Lock size={18} />
           </div>
           <input
-            type="password"
+            type={showPassword ? "text" : "password"}
             name="password"
             required
             value={formData.password}
             onChange={handleChange}
-            className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5B0A1C]/20 focus:border-[#5B0A1C] transition-all shadow-sm"
+            className="w-full pl-11 pr-12 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5B0A1C]/20 focus:border-[#5B0A1C] transition-all shadow-sm"
             placeholder="••••••••"
           />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-[#5B0A1C] transition-colors"
+          >
+            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
         </div>
       </div>
 
@@ -144,3 +152,4 @@ const LoginForm = ({ setislogin }) => {
 };
 
 export default LoginForm;
+

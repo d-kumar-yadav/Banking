@@ -8,6 +8,7 @@ import ManagerDashboardHome from '../components/Manager/ManagerDashboardHome';
 import ManagerAccounts from '../components/Manager/ManagerAccounts';
 import ManagerLoans from '../components/Manager/ManagerLoans';
 import ManagerAccountManager from '../components/Manager/ManagerAccountManager';
+import ManagerCards from '../components/Manager/ManagerCards';
 
 const Manager_dash = ({ setislogin_manager }) => {
   const navigate = useNavigate();
@@ -34,7 +35,8 @@ const Manager_dash = ({ setislogin_manager }) => {
     { name: 'Dashboard', path: '/ManagerDashboard', icon: <LayoutDashboard size={20} /> },
     { name: 'Pending Accounts', path: '/ManagerDashboard/accounts', icon: <Users size={20} /> },
     { name: 'Loan Applications', path: '/ManagerDashboard/loans', icon: <FileText size={20} /> },
-    { name: 'Manage Account', path: '/ManagerDashboard/manage', icon: <CreditCard size={20} /> },
+    { name: 'Card Applications', path: '/ManagerDashboard/cards', icon: <CreditCard size={20} /> },
+    { name: 'Manage Account', path: '/ManagerDashboard/manage', icon: <ShieldCheck size={20} /> },
   ];
 
   return (
@@ -105,6 +107,7 @@ const Manager_dash = ({ setislogin_manager }) => {
             <Route path="/" element={<ManagerDashboardHome />} />
             <Route path="/accounts" element={<ManagerAccounts />} />
             <Route path="/loans" element={<ManagerLoans />} />
+            <Route path="/cards" element={<ManagerCards />} />
             <Route path="/manage" element={<ManagerAccountManager />} />
           </Routes>
         </main>

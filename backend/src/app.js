@@ -11,6 +11,7 @@ const transactionroutes= require("./routes/transaction_route");
 const mlRoutes = require("./routes/ml_routes");
 const loanroutes = require("./routes/loan_routes");
 const superadminroutes= require("./routes/superadmin_routes");
+const cardRoutes = require("./routes/card_routes");
 
 
 
@@ -62,8 +63,7 @@ app.use(cookieParser()); // middleware to parse cookies from the incoming reques
  app.use("/api/auth" ,authroutes);
  // for account 
 app.use("/api/accounts" , accountroutes);
-// for intial find and intra fund transaction
-app.use("/api/intra" , transactionroutes);
+
 app.use("/api/ml", mlRoutes);
 
 //  for laon
@@ -72,6 +72,11 @@ app.use("/api/loan", loanroutes);
 // for superadmin , manager and employee related routes
 app.use("/api" ,superadminroutes );
 
+// for transactin
+app.use("/api/user" , transactionroutes)
+
+// for cards
+app.use("/api/cards", cardRoutes);
 
 
 

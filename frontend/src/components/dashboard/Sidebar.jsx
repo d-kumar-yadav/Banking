@@ -1,5 +1,5 @@
-import { LayoutDashboard, Send, History, Building, Activity, LogOut } from 'lucide-react';
-import axios from 'axios';
+﻿import { LayoutDashboard, Send, History, Building, Activity, LogOut, User, CreditCard, TrendingUp } from 'lucide-react';
+import axios from '../../api/axiosInstance';
 import { useNavigate, NavLink } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
@@ -10,7 +10,7 @@ const Sidebar = ({ setislogin }) => {
    
     try {
   
-      const response = await axios.post('http://localhost:4000/api/auth/logout', {}, { withCredentials: true });
+      const response = await axios.post('/api/auth/logout', {}, { withCredentials: true });
       
       if(response.status === 200){
         toast.success('Logged out successfully');
@@ -32,8 +32,11 @@ const Sidebar = ({ setislogin }) => {
     { path: '/Dashboard', label: 'Accounts Overview', icon: LayoutDashboard },
     { path: '/Dashboard/transfer', label: 'Transfer Money', icon: Send },
     { path: '/Dashboard/history', label: 'Transaction History', icon: History },
-    { path: '/Dashboard/loan', label: 'Loans', icon: Building },
+    { path: '/Dashboard/loan', label: 'Apply for Loan', icon: Building },
+    { path: '/Dashboard/active-loans', label: 'Active Loans', icon: Building },
     { path: '/Dashboard/credit', label: 'Credit Simulator', icon: Activity },
+    { path: '/Dashboard/cards', label: 'Credit Cards', icon: CreditCard },
+    { path: '/Dashboard/profile', label: 'My Profile', icon: User },
   ];
 
   return (
@@ -81,3 +84,4 @@ const Sidebar = ({ setislogin }) => {
 };
 
 export default Sidebar;
+

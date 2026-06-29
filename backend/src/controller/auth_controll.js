@@ -227,7 +227,9 @@ try{
         }).json({
             success:true,       
             message:"Login successful",
-            role: user.role || 'customer'
+            role: user.role || 'customer',
+            userId: user._id
+
          })
 
 
@@ -314,7 +316,8 @@ jwt.verify(token, process.env.JWT_SECRET_KEY, (err, decoded) => {
     return res.status(200).json({
         success: true,
         message: "Token is valid",
-        role: decoded.role || 'customer'
+        role: decoded.role || 'customer',
+        userId: decoded.id
     });
 }); 
 
@@ -325,3 +328,28 @@ jwt.verify(token, process.env.JWT_SECRET_KEY, (err, decoded) => {
         })
     }
 }
+
+// get profile controller
+exports.getProfile = async (req, res) => {
+    try {
+        const user = await usermodel.findById(req.user._id).select('+phone +date_of_birth +pan_id +adhar_id +address');
+        
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            user
+        });
+    } catch (err) {
+        console.error("Error in getProfile", err);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fetch user profile"
+        });
+    }
+};

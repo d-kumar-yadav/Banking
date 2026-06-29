@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import axios from 'axios';
+﻿import { useState, useEffect } from 'react';
+import axios from '../../api/axiosInstance';
 import { Send, ArrowRightLeft, ShieldCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
 import LottiePackage from "lottie-react";
@@ -14,15 +14,15 @@ const TransferMoney = () => {
     fromaccount: '',
     toaccount: '',
     amount: '',
+    transferType: 'Normal'
   });
 
-  const token = localStorage.getItem("token") || cookieStore?.get?.("token")?.value;
-  const config = { headers: { Authorization: `Bearer ${token}` } };
+ 
 
   useEffect(() => {
     const fetchAccounts = async () => {
       try {
-        const res = await axios.get('http://localhost:4000/api/accounts/user/getallaccount', config);
+        const res = await axios.get('/api/accounts/user/getallaccount');
         if (res.data.success) {
           const activeAccounts = res.data.accounts.filter(acc => acc.status === 'Active');
           setAccounts(activeAccounts);
@@ -44,22 +44,33 @@ const TransferMoney = () => {
       return;
     }
     
+    const amount = Number(transferData.amount);
+    if (transferData.transferType === 'Normal' && amount >= 100000) {
+        toast.error('Normal transfer limit is strictly less than ₹1,00,000');
+        return;
+    }
+    if ((transferData.transferType === 'NEFT' || transferData.transferType === 'RTGS') && (amount < 100000 || amount > 500000)) {
+        toast.error(`${transferData.transferType} transfer must be between ₹1,00,000 and ₹5,00,000`);
+        return;
+    }
+    
     // Generate a simple idempotency key
     const idempotencykey = `txn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
     try {
       setLoading(true);
-      const res = await axios.post('http://localhost:4000/api/intra/transaction', {
+      const res = await axios.post('/api/user/transaction', {
         ...transferData,
         amount: Number(transferData.amount),
         idempotencykey
-      }, config);
+      });
 
       if (res.data.success) {
         toast.success(res.data.message || 'Transfer successful');
-        setTransferData(prev => ({ ...prev, toaccount: '', amount: '' }));
+        setTransferData(prev => ({ ...prev, toaccount: '', amount: '', transferType: 'Normal' }));
       }
     } catch (err) {
+      
       toast.error(err.response?.data?.message || 'Transaction failed');
     } finally {
       setLoading(false);
@@ -78,6 +89,26 @@ const TransferMoney = () => {
         <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-amber-500/10 to-transparent rounded-bl-full pointer-events-none"></div>
         
         <form onSubmit={handleTransfer} className="space-y-6 relative z-10">
+
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-slate-700 ml-1">Transfer Type</label>
+            <div className="flex gap-2 p-1 bg-white/60 backdrop-blur-sm border border-slate-200 rounded-2xl w-full">
+                {['Normal', 'NEFT', 'RTGS'].map(type => (
+                    <button
+                        key={type}
+                        type="button"
+                        onClick={() => setTransferData({ ...transferData, transferType: type })}
+                        className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${
+                            transferData.transferType === type
+                                ? 'bg-[#5B0A1C] text-white shadow-md'
+                                : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
+                        }`}
+                    >
+                        {type}
+                    </button>
+                ))}
+            </div>
+          </div>
           
           <div className="space-y-2">
             <label className="text-sm font-semibold text-slate-700 ml-1">From Account</label>
@@ -152,3 +183,4 @@ const TransferMoney = () => {
 };
 
 export default TransferMoney;
+

@@ -7,6 +7,19 @@ require("dotenv").config();
 exports.authMiddleware = async (req, res, next) => {
   try {
     let token = req.cookies?.token || req.body?.token;
+    const authHeader = req.headers?.authorization;
+
+    if (authHeader) {
+      let headerToken;
+      if (authHeader.startsWith("Bearer ")) {
+        headerToken = authHeader.split(" ")[1];
+      } else {
+        headerToken = authHeader;
+      }
+      if (headerToken && headerToken !== "null" && headerToken !== "undefined") {
+        token = headerToken;
+      }
+    }
 
     if (!token) {
       return res.status(401).json({
@@ -54,10 +67,14 @@ exports.managermiddleware = async (req, res, next) => {
     const authHeader = req.headers?.authorization;
 
     if (authHeader) {
+      let headerToken;
       if (authHeader.startsWith("Bearer ")) {
-        token = authHeader.split(" ")[1];
+        headerToken = authHeader.split(" ")[1];
       } else {
-        token = authHeader; // Fallback if "Bearer " prefix is missing
+        headerToken = authHeader; // Fallback if "Bearer " prefix is missing
+      }
+      if (headerToken && headerToken !== "null" && headerToken !== "undefined") {
+        token = headerToken;
       }
     }
 
@@ -94,9 +111,9 @@ exports.managermiddleware = async (req, res, next) => {
         message: "Token has expired, please login again",
       });
     }
-    return res.status(500).json({
+    return res.status(401).json({
       success: false,
-      message: "Internal server error",
+      message: "Invalid token or unauthorized access",
     });
   }
 };
@@ -107,10 +124,14 @@ exports.employeeMiddleware = async (req, res, next) => {
     const authHeader = req.headers?.authorization;
 
     if (authHeader) {
+      let headerToken;
       if (authHeader.startsWith("Bearer ")) {
-        token = authHeader.split(" ")[1];
+        headerToken = authHeader.split(" ")[1];
       } else {
-        token = authHeader; 
+        headerToken = authHeader; 
+      }
+      if (headerToken && headerToken !== "null" && headerToken !== "undefined") {
+        token = headerToken;
       }
     }
 
@@ -147,9 +168,9 @@ exports.employeeMiddleware = async (req, res, next) => {
         message: "Token has expired, please login again",
       });
     }
-    return res.status(500).json({
+    return res.status(401).json({
       success: false,
-      message: "Internal server error",
+      message: "Invalid token or unauthorized access",
     });
   }
 };
@@ -160,10 +181,14 @@ exports.sytemusermiddleware = async (req, res, next) => {
     const authHeader = req.headers?.authorization;
 
     if (authHeader) {
+      let headerToken;
       if (authHeader.startsWith("Bearer ")) {
-        token = authHeader.split(" ")[1];
+        headerToken = authHeader.split(" ")[1];
       } else {
-        token = authHeader; // Fallback if "Bearer " prefix is missing
+        headerToken = authHeader; // Fallback if "Bearer " prefix is missing
+      }
+      if (headerToken && headerToken !== "null" && headerToken !== "undefined") {
+        token = headerToken;
       }
     }
 
@@ -197,9 +222,9 @@ exports.sytemusermiddleware = async (req, res, next) => {
         message: "Token has expired, please login again",
       });
     }
-    return res.status(500).json({
+    return res.status(401).json({
       success: false,
-      message: "Internal server error",
+      message: "Invalid token or unauthorized access",
     });
   }
 };

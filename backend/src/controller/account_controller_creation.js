@@ -9,6 +9,7 @@ const { sendSMS } = require("../service/sms");
 const transactionmodel = require("../models/transaction");
 const refernceaccountmodel = require("../models/refernce_account");
 const Branch = require("../models/branch_model");
+const employee = require("../models/employe_model");
 
 //  for account creation
 exports.createaccount = async (req, res) => {
@@ -67,8 +68,7 @@ exports.createaccount = async (req, res) => {
                 message: "Branch not found for the provided Branch Code"
             });
         }
-
-        const refernceaccount = await refernceaccountmodel.create({ user: userId, account_type, branchCode: branch._id });
+         
 
         const user = await usermodel.findByIdAndUpdate(
             userId,
@@ -81,25 +81,27 @@ exports.createaccount = async (req, res) => {
                     address,
                     pan_id,
                     adhar_id
-                    // kycStatus remains 'pending' (default) until admin approves
                 }
             },
-            { returnDocument: 'after', runValidators: true } // Returns updated user & runs regex matching on PAN/Aadhaar 
-            // returnDocument: 'after'  return updated object
-            // runvalidatoor: it check schema validation like 
-        )
+            { returnDocument: 'after', runValidators: true }
+        );
 
-        if (!user) {
+       if (!user) {
             return res.status(404).json({
                 success: false,
                 message: "User not found"
             });
         }
 
-        // Delete the OTP record after successful registration
+       
+        await refernceaccountmodel.deleteOne({ user: userId }); // this line act as barrier if due to some bug refrence account
+        // is created with this user so it delete it firs then it create new
+        const refernceaccount = await refernceaccountmodel.create({ user: userId, account_type, branchCode: branch._id });
+
+     
         await otpmodel.deleteOne({ phone: checkUser.phone });
 
-        // Send email notification for account creation request
+  
         try {
             await emailservice(
                 req.user.email,
@@ -110,33 +112,35 @@ exports.createaccount = async (req, res) => {
             console.error("Email notification failed:", emailErr);
         }
 
-
-
         return res.status(201).json({
             success: true,
-            message: "Account created successfully , and it is under Review , please wait for approval",
+            message: "Account created successfully, and it is under Review. Please wait for approval."
+        });
 
-
-        })
-
-
-    }
-
-    catch (err) {
+    } catch (err) {
         console.error("Error in createaccount controller", err);
 
-        // Handle Duplicate entry error specifically (e.g. Aadhaar or PAN is already used by another user)
-        if (err.code === 11000 ) {
+        // handle duplicate Pan/Aadhar
+        if (err.code === 11000) {
             return res.status(400).json({
                 success: false,
-                message: " An Account already exists for this Adhar_id and Pan_id "
+                message: "An Account already exists for this Adhar_id or Pan_id"
+            });
+        }
+
+        // handle Mongoose validation errors (like 11-digit Aadhar)
+        if (err.name === 'ValidationError') {
+            const messages = Object.values(err.errors).map(val => val.message);
+            return res.status(400).json({
+                success: false,
+                message: messages.join(', ')
             });
         }
 
         return res.status(500).json({
             success: false,
             message: err.message || "Account creation failed due to server error"
-        })
+        });
     }
 
 }
@@ -145,7 +149,7 @@ exports.createaccount = async (req, res) => {
 exports.getappliedaccounts = async (req, res) => {
     try {
 
-        const appliedaccounts = await refernceaccountmodel.find({ user: req.user._id }).populate("user", "+pan_id +adhar_id +phone +address");
+        const appliedaccounts = await refernceaccountmodel.find({ user: req.user._id }).populate("user", "+pan_id +adhar_id +phone +address").populate("branchCode");
         return res.status(200).json({
             success: true,
             message: "Applied accounts fetched successfully",
@@ -170,12 +174,16 @@ exports.getallaccount = async (req, res) => {
 
     try {
 
-        const accounts = await accountmodel.find({ user: req.user._id })
+        const accounts = await accountmodel.find({ user: req.user._id });
+        const accountsWithBalance = await Promise.all(accounts.map(async (acc) => {
+            const balance = await acc.getbalance();
+            return { ...acc.toObject(), balance };
+        }));
 
         return res.status(200).json({
             success: true,
             message: "Accounts fetched successfully",
-            accounts // The frontend will receive this as a JSON array
+            accounts: accountsWithBalance // The frontend will receive this as a JSON array
         })
     }
     catch (err) {
@@ -237,36 +245,42 @@ exports.getbalance = async (req, res) => {
 exports.approvefrozenaccount = async (req, res) => {
 
     try {
-        if (req.user.role != "Manager" && req.user.role != "Superadmin") {
+        if (req.user.role !== "Manager" && req.user.role !== "Superadmin") {
             return res.status(403).json({
                 success: false,
-                message: "Unauthorized: Admin access required"
-            })
+                message: "Unauthorized: Manager or Superadmin access required"
+            });
         }
 
-        const { accountNumber , branchCode } = req.body;
+        const { accountNumber } = req.body;
         
-//  here we  find all account with frozen statue  but we cannot unfreeze every account means thta account may belong to dofffent branch 
-//  so unfreeze that account which is related to that branch which manager is managing
-
-
-        const account = await accountmodel.findOne({ accountNumber: accountNumber, status: "Frozen" , branchCode: branchCode }).populate("user");
+        const account = await accountmodel.findOne({ accountNumber: accountNumber, status: "Frozen" }).populate("user");
+        
         if (!account) {
             return res.status(404).json({
                 success: false,
-                message: "Account not found"
-            })
+                message: "Account not found or is not currently frozen"
+            });
+        }
+
+        if (req.user.role === "Manager") {
+            if (!req.user.branch) {
+                return res.status(403).json({ success: false, message: "Manager does not have an assigned branch" });
+            }
+            if (!account.branch || account.branch.toString() !== req.user.branch.toString()) {
+                return res.status(403).json({ 
+                    success: false, 
+                    message: "Access Denied: This account belongs to a different branch." 
+                });
+            }
         }
 
 
+        account.status = "Active";
+        await account.save();
 
-        const updateaccount = await accountmodel.findOneAndUpdate(
-            { accountNumber: accountNumber, status: "Frozen" },
-            { status: "Active" },
-            { returnDocument: "after" }
-        );
-
-
+        // 4. Send notification email
+         try{
         await emailservice(
             account.user.email,
             "Account Unfrozen",
@@ -280,8 +294,18 @@ exports.approvefrozenaccount = async (req, res) => {
         return res.status(200).json({
             success: true,
             message: "Account has been approved and unfrozen successfully",
-
+        });
+    }
+    catch(err){
+       
+        return res.status(500).json({
+            success:false,
+            messgae:"Failed to send email notification"
         })
+    }
+
+      
+
 
 
     } catch (err) {
@@ -324,6 +348,18 @@ exports.approveAccount = async (req, res) => {
             return res.status(404).json({ success: false, message: "Reference account not found" });
         }
 
+        if (req.user.role === "Manager") {
+            if (!req.user.branch) {
+                return res.status(403).json({ success: false, message: "Manager does not have an assigned branch" });
+            }
+            if (!refAccount.branchCode || refAccount.branchCode.toString() !== req.user.branch.toString()) {
+                return res.status(403).json({ 
+                    success: false, 
+                    message: "Access Denied: This account application belongs to a different branch." 
+                });
+            }
+        }
+
         // 1. Update user KYC status to verified
         user.kycStatus = "verified";
 
@@ -334,7 +370,7 @@ exports.approveAccount = async (req, res) => {
             user: userId,
             account_type: refAccount.account_type,
             status: "Active",
-            branchCode: refAccount.branchCode
+            branch: refAccount.branchCode
         });
 
         await account.populate("user");
@@ -381,6 +417,23 @@ exports.rejectAccount = async (req, res) => {
             return res.status(404).json({ success: false, message: "User not found" });
         }
 
+        const refAccount = await refernceaccountmodel.findOne({ refrencenumber: refrencenumber });
+        if (!refAccount) {
+            return res.status(404).json({ success: false, message: "Reference account not found" });
+        }
+
+        if (req.user.role === "Manager") {
+            if (!req.user.branch) {
+                return res.status(403).json({ success: false, message: "Manager does not have an assigned branch" });
+            }
+            if (!refAccount.branchCode || refAccount.branchCode.toString() !== req.user.branch.toString()) {
+                return res.status(403).json({ 
+                    success: false, 
+                    message: "Access Denied: This account application belongs to a different branch." 
+                });
+            }
+        }
+
         if (user.kycStatus === 'verified') {
             return res.status(400).json({ success: false, message: "Cannot reject, user is already verified" });
         }
@@ -424,7 +477,7 @@ exports.rejectAccount = async (req, res) => {
 // Manager can get account details by account number
 exports.getaccountdetails = async (req, res) => {
     try {
-        if (req.user.role != "Manager" && req.user.role != "Superadmin") {
+        if (req.user.role != "Manager" ) {
             return res.status(403).json({
                 success: false,
                 message: "Unauthorized: Manager or Superadmin access required"
@@ -432,18 +485,46 @@ exports.getaccountdetails = async (req, res) => {
         }
 
         const { accountNumber } = req.params;
-        const account = await accountmodel.findOne({ accountNumber: accountNumber }).populate("user");
-        // here account is document object and it has user field which is reference of user model and we populate it to get user details along with account details
+        
+     
+        const account = await accountmodel.findOne({ accountNumber: accountNumber }).populate({
+            path: "user", // it means go to user object in account obejct u fetched and get the details
+            select: "+phone +date_of_birth +pan_id +adhar_id +address +creditScore +monthlyIncome +kycStatus"
+        });
+
         if (!account) {
             return res.status(404).json({
                 success: false,
-                message: "Account not found"
-            })
+                message: "Account not found in the database"
+            });
         }
+
+        // Branch-level access control for Managers
+        if (req.user.role === "Manager") {
+            if (!req.user.branch) {
+                return res.status(403).json({ success: false, message: "Manager does not have an assigned branch" });
+            }
+            if (!account.branch || account.branch.toString() !== req.user.branch.toString()) {
+                return res.status(403).json({ 
+                    success: false, 
+                    message: "Access Denied: This account belongs to a different branch." 
+                });
+            }
+        }
+        
+        const balance = await account.getbalance();
+        const accountData = account.toObject();
+        accountData.balance = balance;
+
+        // Fetch loans associated with this user
+        const loanmodel = require("../models/loan_model");
+        const loans = await loanmodel.find({ user: account.user._id });
+        accountData.loans = loans;
+
         return res.status(200).json({
             success: true,
             message: "Account details fetched successfully",
-            account
+            account: accountData
         })
 
     } catch (err) {
@@ -465,6 +546,20 @@ exports.getflaggedtransactions = async (req, res) => {
             })
         }
         const { accountNumber } = req.params;
+
+        if (req.user.role === "Manager") {
+            if (!req.user.branch) {
+                return res.status(403).json({ success: false, message: "Manager does not have an assigned branch" });
+            }
+            const account = await accountmodel.findOne({ accountNumber });
+            if (!account || !account.branch || account.branch.toString() !== req.user.branch.toString()) {
+                return res.status(403).json({ 
+                    success: false, 
+                    message: "Access Denied: This account belongs to a different branch." 
+                });
+            }
+        }
+
         const transactions = await transactionmodel.find({ fromaccount: accountNumber, status: { $regex: /^flagged$/i } });
 
         if (!transactions || transactions.length === 0) {

@@ -1,6 +1,6 @@
 const express= require("express");
 const router = express.Router();
-const { createBranch, getAllBranches, getBranchById, updateBranch, deleteBranch, allocate_funds, branch_tranx, login,  logout, add_employee, add_to_branch, getEmployeeById, updateEmployee, deleteEmployee, getMe, getAllEmployees, branchbalane } = require("../controller/superadmin_controll");
+const { createBranch, getAllBranches, getBranchById, updateBranch, deleteBranch, allocate_funds, branch_tranx, login,  logout, add_employee, add_to_branch, getEmployeeById, updateEmployee, deleteEmployee, getMe, getAllEmployees, branchbalane ,intialfundcontroller} = require("../controller/superadmin_controll");
 const {superadminMiddleware} = require("../middleware/superadmin_middleware");
 const { employeeMiddleware } = require("../middleware/auth_middleware");
 
@@ -21,8 +21,12 @@ router.get("/employee/get_employee/:id", superadminMiddleware, getEmployeeById);
 router.put("/employee/update_employee/:id", superadminMiddleware, updateEmployee);
 router.delete("/employee/delete_employee/:id", superadminMiddleware, deleteEmployee);
 
+
 // Employee own data
 router.get("/employee/me", employeeMiddleware, getMe);
 router.get("/employee/branch/balance", employeeMiddleware, branchbalane);
+router.post("/employee/intialfund", employeeMiddleware, intialfundcontroller);
+
+
 
 module.exports = router;   

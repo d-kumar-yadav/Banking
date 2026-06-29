@@ -206,20 +206,21 @@ exports.getBranchById = async(req ,res) =>{
     }
     const {id} = req.params;
     try{
-        const branch = await branchmodel.findById(id);  
+        let  branch = await branchmodel.findOne({ branchCode: id });
+        
+        
         if(!branch){
             return res.status(404).json({
                 success:false,
                 message:"Branch not found"
             })
         }   
-        const manager = await employeeModel.findOne({ branch: branch._id, role: "Manager" });
-        return res.status(200).json({
+        else return res.status(200).json({
             success:true,
             message:"Branch retrieved successfully",
-            branch,
-            manager
+            branch
         })
+
     }       
     catch(err){
         return res.status(500).json({
@@ -560,7 +561,10 @@ exports.getEmployeeById = async (req, res) => {
             message:"Forbidden access. Super Admin only."
         })
     }
-    const employee= await employeeModel.findById(id).select("-password").populate("branch");
+    const mongoose = require("mongoose");
+    let  employee = await employeeModel.findOne({ employeeId: id }).select("-password").populate("branch");
+    
+
     if(!employee){
         return res.status(404).json({
             success:false,
@@ -686,3 +690,143 @@ exports.branchbalane = async(req ,res) =>{
         });
     }
 }
+
+
+
+
+// intial fund
+exports.intialfundcontroller =async (req,res)=>{
+    const user= req.user;
+    if(user.role!="Manager"){
+        return res.status(403).json({
+            success:false,
+            message:"Forbidden access. Manager only."   
+    })
+    }
+
+    try{
+ const{toaccount,amount, idempotencykey}= req.body;
+ if(!toaccount || !amount || !idempotencykey){  
+         return res.status(400).json({
+            success:false,
+            message:"All fields are required"
+         })
+         
+ }
+ 
+
+  // Check for idempotency key to gracefully avoid duplicate transaction errors
+  const existtransaction = await transactionmodel.findOne({idempotencykey}); 
+  if(existtransaction){
+      if(existtransaction.status === "Completed"){
+          return res.status(200).json({
+              success:true,
+              message:"Initial fund already added successfully (Idempotent retry)",
+              transactionId: existtransaction._id
+          })
+      }
+
+      else if(existtransaction.status === "Pending"){
+          return res.status(400).json({
+              success:false,
+              message:"Transaction with this idempotency key is already in progress"
+          })
+      }
+
+      else if(existtransaction.status === "Failed"){
+          return res.status(400).json({
+              success:false,
+              message:"Transaction with this idempotency key has already failed ,retry again"
+          })
+      }
+      
+      else if(existtransaction.status === "Reversed"){
+          return res.status(400).json({
+              success:false,
+              message:"Transaction with this idempotency key has already been reversed , retry again"
+          })
+      }
+  }
+
+  const branch = await branchmodel.findById(req.user.branch);
+  if (!branch) {
+      return res.status(404).json({
+          success: false,
+          message: "Branch not found for this manager"
+      });
+  }
+  const fromaccount = branch.branchAccount;
+
+
+  // create session
+   const session= await mongoose.startSession();
+        // create session
+        session.startTransaction();
+        // initiates the transaction on that session. like updates , delete ,insert
+
+        let transaction; // Declare here so it's accessible after try block
+
+        try {
+            // Check branch balance before initiating transaction using the branch document directly
+            const currentBranchBalance = await branch.getbalance();
+            
+            if (currentBranchBalance < amount) {
+                // Abort session because we already started it
+                await session.abortTransaction();
+                session.endSession();
+                return res.status(400).json({ success: false, message: "Insufficient Funds in Branch Account" });
+            }
+
+            transaction= new transactionmodel({
+                
+                fromaccount: fromaccount,
+                toaccount: toaccount,
+                amount,
+                idempotencykey,
+                status:"Pending"
+            }  )
+            const debitledgerentry= await ledgermodel.create([{
+                account: fromaccount,
+                amount:amount,
+                transaction:transaction._id,
+                type:"debit"
+            } ], {session}) 
+
+         
+            const creditledgerentry= await ledgermodel.create([{
+                account: toaccount,
+                amount:amount,
+                transaction:transaction._id,
+                type:"credit"
+            }] , {session})
+
+            
+            transaction.status= "Completed";
+            await transaction.save({session});
+            await session.commitTransaction();
+        } catch (error) {
+            await session.abortTransaction();
+            throw error;
+        } finally {
+            
+            session.endSession();
+        }
+
+        // Send the successful response so the client doesn't hang!
+        return res.status(200).json({
+            success: true,
+            message: "Initial fund added successfully",
+            transactionId: transaction._id
+        });
+    }
+
+   catch(err){
+        console.error("Error in intial fund  controller", err);
+        return res.status(500).json({
+            success:false,
+            message:"Internal server error"
+        })
+    }
+
+}
+

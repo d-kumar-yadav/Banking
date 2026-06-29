@@ -19,9 +19,17 @@ const mongoose= require("mongoose");
    status:{
     type:String ,
     enum:{
-        values:["Pending","Completed","Failed" ,"Reversed", "flagged"],
+        values:["Pending","Completed","Failed" ,"Reversed", "flagged", "Processing_External"],
     },
     default:"Pending"
+   },
+
+   transferType: {
+       type: String,
+       enum: {
+           values: ["Normal", "NEFT", "RTGS"]
+       },
+       default: "Normal"
    },
 
    amount:{
