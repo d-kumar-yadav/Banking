@@ -42,7 +42,7 @@ async function sendEmail(to, subject, text, html) {
 
     // 4. Send via Gmail API over HTTPS (port 443) which bypasses Render's blocked ports
     await axios.post(
-      'https://gmail.googleapis.com/upload/gmail/v1/users/me/messages/send',
+      'https://gmail.googleapis.com/gmail/v1/users/me/messages/send',
       { raw: raw },
       {
         headers: {
