@@ -205,7 +205,7 @@ const AccountsOverview = () => {
       </div>
 
       {/* Quick Actions Row */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <button onClick={() => window.location.href='/Dashboard/transfer'} className="bg-white border border-slate-200 p-4 rounded-2xl flex flex-col items-center justify-center gap-2 hover:shadow-md hover:border-[#5B0A1C]/30 transition-all group">
               <div className="w-10 h-10 bg-rose-50 rounded-full flex items-center justify-center group-hover:bg-[#5B0A1C] transition-colors">
                   <ArrowUpRight className="w-5 h-5 text-[#5B0A1C] group-hover:text-white" />

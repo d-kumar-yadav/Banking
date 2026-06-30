@@ -90,7 +90,7 @@ const ManagerLoans = () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left border-collapse min-w-[800px]">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200">
                   {['Ref / Loan ID','User Name','Amount','Purpose','Status','Actions'].map((h, i) => (

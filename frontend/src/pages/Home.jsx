@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, UserCircle, ArrowRight, Landmark, Zap, BarChart3, Fingerprint, Activity, Wallet, PieChart, CreditCard, Clock, Lock, CheckCircle, Smartphone, Download, Star, Award, HelpCircle, ChevronDown } from 'lucide-react';
+import { ShieldCheck, UserCircle, ArrowRight, Landmark, Zap, BarChart3, Fingerprint, Activity, Wallet, PieChart, CreditCard, Clock, Lock, CheckCircle, Smartphone, Download, Star, Award, HelpCircle, ChevronDown, Menu, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Home = () => {
   const [activeSection, setActiveSection] = useState('');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [loanAmount, setLoanAmount] = useState(500000);
   const [interestRate, setInterestRate] = useState(10.5);
   const [tenure, setTenure] = useState(5);
@@ -64,7 +65,7 @@ const Home = () => {
           ))}
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="hidden lg:flex items-center gap-4">
           <Link to="/login" className="text-[#5B0A1C] font-bold hover:text-rose-900 transition-colors text-sm">
             LOGIN
           </Link>
@@ -72,7 +73,39 @@ const Home = () => {
             OPEN ACCOUNT
           </Link>
         </div>
+
+        {/* Mobile Menu Toggle */}
+        <button 
+          className="lg:hidden p-2 text-slate-600 hover:text-[#5B0A1C]"
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        >
+          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
       </nav>
+
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div className="lg:hidden fixed inset-0 z-40 bg-white pt-24 px-6 pb-6 flex flex-col shadow-2xl border-b border-slate-100">
+          <div className="flex flex-col gap-6 font-bold text-slate-800 text-lg">
+            {["Accounts", "Cards", "Loans"].map((item) => (
+              <a 
+                key={item} 
+                href={`#${item.toLowerCase()}`} 
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="hover:text-[#5B0A1C] transition-colors border-b border-slate-100 pb-4"
+              >
+                {item}
+              </a>
+            ))}
+            <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} className="text-[#5B0A1C] mt-4">
+              LOGIN
+            </Link>
+            <Link to="/signup" onClick={() => setIsMobileMenuOpen(false)} className="px-6 py-4 bg-[#5B0A1C] text-white rounded text-center shadow-md">
+              OPEN ACCOUNT
+            </Link>
+          </div>
+        </div>
+      )}
 
       
       <header className="relative bg-slate-50 pt-20 pb-40 lg:pb-52 px-6 lg:px-12 overflow-hidden border-b border-slate-200">
@@ -81,8 +114,8 @@ const Home = () => {
             <ShieldCheck size={16} className="text-emerald-600" /> RBI Regulated & Secured by Neural ML
           </div>
           
-          <h1 className="text-5xl lg:text-7xl font-black text-slate-900 tracking-tight leading-tight max-w-4xl">
-            Banking that moves at the <br/>
+          <h1 className="text-4xl md:text-5xl lg:text-7xl font-black text-slate-900 tracking-tight leading-tight max-w-4xl">
+            Banking that moves at the <br className="hidden md:block"/>
             <span className="text-[#5B0A1C]">speed of your life.</span>
           </h1>
           
@@ -90,11 +123,11 @@ const Home = () => {
             Experience zero-fee accounts, instant AI-approved loans, and real-time fraud monitoring. All in one beautifully simple dashboard.
           </p>
           
-          <div className="flex gap-4 mt-10">
-            <Link to="/signup" className="px-8 py-3.5 bg-[#5B0A1C] text-white rounded font-bold text-lg shadow-lg hover:bg-[#420714] transition-all flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row gap-4 mt-10 w-full sm:w-auto">
+            <Link to="/signup" className="px-8 py-3.5 bg-[#5B0A1C] text-white rounded font-bold text-lg shadow-lg hover:bg-[#420714] transition-all flex items-center justify-center gap-2 w-full sm:w-auto">
               Get Started <ArrowRight size={20} />
             </Link>
-            <Link to="/login" className="px-8 py-3.5 bg-white text-slate-700 border border-slate-300 rounded font-bold text-lg hover:bg-slate-50 transition-all">
+            <Link to="/login" className="px-8 py-3.5 bg-white text-slate-700 border border-slate-300 rounded font-bold text-lg hover:bg-slate-50 transition-all flex items-center justify-center w-full sm:w-auto">
               Net Banking
             </Link>
           </div>

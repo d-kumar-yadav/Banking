@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Routes, Route, NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Building2, Users, Banknote, LogOut } from 'lucide-react';
+import { LayoutDashboard, Building2, Users, Banknote, LogOut, Menu, X } from 'lucide-react';
 import axios from '../api/axiosInstance';
 import toast from 'react-hot-toast';
 
@@ -10,6 +10,7 @@ import SuperadminEmployees from '../components/Superadmin/SuperadminEmployees';
 import SuperadminFunds from '../components/Superadmin/SuperadminFunds';
 
 const Superadmin_dash = ({ setislogin_superadmin }) => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -36,16 +37,31 @@ const Superadmin_dash = ({ setislogin_superadmin }) => {
   ];
 
   return (
-    <div className="flex h-screen text-slate-900 font-sans bg-slate-50">
+    <div className="flex h-screen text-slate-900 font-sans bg-slate-50 overflow-hidden">
      
-      <div className="w-64 flex flex-col justify-between z-20 shadow-xl bg-slate-900">
+      {/* Mobile Sidebar Overlay */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 lg:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        ></div>
+      )}
+
+      {/* Sidebar */}
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 flex flex-col justify-between shadow-xl bg-slate-900 transform transition-transform duration-300 lg:relative lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div>
           {/* Logo */}
-          <div className="h-16 flex items-center px-6 space-x-3 border-b border-white/10">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm shadow-sm bg-indigo-500 text-white">
-              SA
+          <div className="h-16 flex items-center justify-between px-6 border-b border-white/10">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm shadow-sm bg-indigo-500 text-white">
+                SA
+              </div>
+              <h1 className="text-base font-bold tracking-tight text-white">Superadmin</h1>
             </div>
-            <h1 className="text-base font-bold tracking-tight text-white">Superadmin Portal</h1>
+            {/* Close button on mobile */}
+            <button className="lg:hidden text-slate-400 hover:text-white" onClick={() => setIsSidebarOpen(false)}>
+              <X size={20} />
+            </button>
           </div>
 
           {/* Nav */}
@@ -57,6 +73,7 @@ const Superadmin_dash = ({ setislogin_superadmin }) => {
                 end={item.path === '/SuperadminDashboard'}
                 onMouseEnter={e => { if (!e.currentTarget.classList.contains('active')) { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = '#ffffff'; } }}
                 onMouseLeave={e => { if (!e.currentTarget.classList.contains('active')) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#94a3b8'; } }}
+                onClick={() => setIsSidebarOpen(false)}
                 className={({ isActive }) =>
                   `flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-all duration-200 text-sm ${
                     isActive ? 'font-bold active' : 'font-medium'
@@ -88,10 +105,15 @@ const Superadmin_dash = ({ setislogin_superadmin }) => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden w-full">
         {/* Header */}
-        <header className="h-16 flex items-center justify-between px-8 z-10 sticky top-0 bg-white/80 backdrop-blur-md border-b border-slate-200">
-          <h2 className="text-sm font-semibold text-slate-600">Superadmin Control Center</h2>
+        <header className="h-16 flex items-center justify-between px-4 lg:px-8 z-10 sticky top-0 bg-white/80 backdrop-blur-md border-b border-slate-200">
+          <div className="flex items-center gap-3">
+            <button className="lg:hidden p-2 -ml-2 text-slate-600 hover:bg-slate-100 rounded-md" onClick={() => setIsSidebarOpen(true)}>
+              <Menu size={24} />
+            </button>
+            <h2 className="text-sm font-semibold text-slate-600 hidden sm:block">Superadmin Control Center</h2>
+          </div>
           <div className="flex items-center space-x-3">
             <span className="flex h-3 w-3 relative">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>

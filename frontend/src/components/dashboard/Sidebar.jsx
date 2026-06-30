@@ -1,9 +1,9 @@
-﻿import { LayoutDashboard, Send, History, Building, Activity, LogOut, User, CreditCard, TrendingUp } from 'lucide-react';
+import { LayoutDashboard, Send, History, Building, Activity, LogOut, User, CreditCard, TrendingUp, X } from 'lucide-react';
 import axios from '../../api/axiosInstance';
 import { useNavigate, NavLink } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
-const Sidebar = ({ setislogin }) => {
+const Sidebar = ({ setislogin, setIsSidebarOpen }) => {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -40,16 +40,28 @@ const Sidebar = ({ setislogin }) => {
   ];
 
   return (
-    <div className="w-72 bg-white/40 backdrop-blur-xl border-r border-white/60 h-screen flex flex-col pt-10 pb-6 px-6 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
-      <div className="flex items-center gap-3 mb-12 px-2">
-        <div className="w-12 h-12 bg-gradient-to-tr from-[#5B0A1C] to-[#831028] rounded-xl flex shadow-lg shadow-rose-900/20 items-center justify-center">
-          <Building className="text-amber-400 w-6 h-6" />
+    <div className="w-72 bg-white/95 md:bg-white/40 backdrop-blur-xl border-r border-white/60 h-screen flex flex-col pt-10 pb-6 px-6 shadow-[4px_0_24px_rgba(0,0,0,0.02)] overflow-y-auto">
+      <div className="flex items-center justify-between mb-12 px-2">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 bg-gradient-to-tr from-[#5B0A1C] to-[#831028] rounded-xl flex shadow-lg shadow-rose-900/20 items-center justify-center">
+            <Building className="text-amber-400 w-6 h-6" />
+          </div>
+          <div className="flex flex-col leading-none">
+            <span className="text-2xl font-black tracking-tighter text-[#5B0A1C]">
+              MY<span className="text-slate-800">BANK</span>
+            </span>
+          </div>
         </div>
-        <div className="flex flex-col leading-none">
-          <span className="text-2xl font-black tracking-tighter text-[#5B0A1C]">
-            MY<span className="text-slate-800">BANK</span>
-          </span>
-        </div>
+        
+        {/* Mobile Close Button */}
+        {setIsSidebarOpen && (
+          <button 
+            className="md:hidden p-2 text-slate-500 hover:text-rose-600 bg-slate-100 rounded-lg"
+            onClick={() => setIsSidebarOpen(false)}
+          >
+            <X size={20} />
+          </button>
+        )}
       </div>
 
       <nav className="flex-1 space-y-2">
@@ -58,6 +70,7 @@ const Sidebar = ({ setislogin }) => {
             key={item.label}
             to={item.path}
             end={item.path === '/Dashboard'}
+            onClick={() => setIsSidebarOpen && setIsSidebarOpen(false)}
             className={({ isActive }) =>
               `w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 font-medium ${
                 isActive

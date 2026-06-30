@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
-import { LogOut, ShieldCheck } from 'lucide-react';
+import { LogOut, ShieldCheck, Menu, X } from 'lucide-react';
 import axios from '../api/axiosInstance';
 import toast from 'react-hot-toast';
 
 import EmployeeDashboardHome from '../components/Employee/EmployeeDashboardHome';
 
 const Employee_dash = ({ setislogin_employee }) => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -25,17 +26,31 @@ const Employee_dash = ({ setislogin_employee }) => {
   };
 
   return (
-    <div className="flex h-screen bg-zinc-50 font-sans text-zinc-900">
+    <div className="flex h-screen bg-zinc-50 font-sans text-zinc-900 overflow-hidden">
      
+      {/* Mobile Sidebar Overlay */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 lg:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        ></div>
+      )}
+
       {/* Sidebar - Zinc 900 */}
-      <div className="w-64 flex flex-col justify-between z-20 bg-zinc-900 shadow-2xl border-r border-zinc-800">
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 flex flex-col justify-between bg-zinc-900 shadow-2xl border-r border-zinc-800 transform transition-transform duration-300 lg:relative lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div>
           {/* Logo */}
-          <div className="h-16 flex items-center px-6 space-x-3 border-b border-zinc-800">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm shadow-sm bg-violet-600 text-white">
-              <ShieldCheck size={20} />
+          <div className="h-16 flex items-center justify-between px-6 border-b border-zinc-800">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm shadow-sm bg-violet-600 text-white">
+                <ShieldCheck size={20} />
+              </div>
+              <h1 className="text-base font-bold tracking-tight text-white">Employee Portal</h1>
             </div>
-            <h1 className="text-base font-bold tracking-tight text-white">Employee Portal</h1>
+            {/* Close button on mobile */}
+            <button className="lg:hidden text-zinc-400 hover:text-white" onClick={() => setIsSidebarOpen(false)}>
+              <X size={20} />
+            </button>
           </div>
         </div>
 
@@ -52,10 +67,15 @@ const Employee_dash = ({ setislogin_employee }) => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden w-full">
         {/* Header */}
-        <header className="h-16 flex items-center justify-between px-8 z-10 sticky top-0 bg-white/80 backdrop-blur-md border-b border-zinc-200 shadow-sm">
-          <h2 className="text-sm font-semibold text-zinc-500">Employee Information Hub</h2>
+        <header className="h-16 flex items-center justify-between px-4 lg:px-8 z-10 sticky top-0 bg-white/80 backdrop-blur-md border-b border-zinc-200 shadow-sm">
+          <div className="flex items-center gap-3">
+            <button className="lg:hidden p-2 -ml-2 text-zinc-600 hover:bg-zinc-100 rounded-md" onClick={() => setIsSidebarOpen(true)}>
+              <Menu size={24} />
+            </button>
+            <h2 className="text-sm font-semibold text-zinc-500 hidden sm:block">Employee Information Hub</h2>
+          </div>
           <div className="flex items-center space-x-3">
             <span className="flex h-3 w-3 relative">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>

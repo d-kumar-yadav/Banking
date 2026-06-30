@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import axios from '../../api/axiosInstance';
 import { History, ArrowDownLeft, ArrowUpRight, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -91,8 +91,8 @@ const TransactionHistory = () => {
             <p className="text-slate-500 mt-2">Looks like you haven't made any transactions with this account yet.</p>
           </div>
         ) : (
-          <div className="overflow-auto flex-1">
-            <table className="w-full text-left border-collapse">
+          <div className="overflow-auto flex-1 overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[600px]">
               <thead>
                 <tr className="border-b border-slate-200/60 bg-slate-50/50 backdrop-blur-sm sticky top-0 z-10">
                   <th className="py-5 px-6 font-semibold text-slate-600 text-sm">Type</th>

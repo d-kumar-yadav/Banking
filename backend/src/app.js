@@ -21,9 +21,9 @@ const httpServer = http.createServer(app);
 
 // Initialize web  Socket.io server , to manage event like user connection, disconnetion 
 /* 
-// --- UNCOMMENT FOR STRICT LOCAL DEVELOPMENT ---
+// --- ---
 const io = new Server(httpServer, {
-    cors: { origin:  ['http://localhost:5173', 'http://localhost:5174']  } // allow frontend to talk with backend from any origin any where 3000 or 8000 port
+    cors: { origin:  ['http://localhost:5173', 'http://localhost:5174']  } // allow frontend to talk with backend
 });
 */
 
@@ -48,12 +48,12 @@ app.use((req, res, next) => {
 
 // socket: This represents the specific connection of that one user. Every user gets a unique socket.id.
 io.on('connection', (socket) => {
-    console.log('A user connected:', socket.id);
+    // console.log('A user connected:', socket.id);
 
 
     socket.on('join', (userId) => {
         socket.join(userId);   // This creates a Private Room. In a bank, you don't want everyone to see your credit score. By joining a room named after their userId, you can send private messages specifically to that user later using io.to(userId).emit(...).
-        console.log(`User ${userId} joined their personal room.`);
+        // console.log(`User ${userId} joined their personal room.`);
     });
 
     socket.on('disconnect', () => {
@@ -63,7 +63,7 @@ io.on('connection', (socket) => {
 
 // Enable CORS for Express API routes
 /*
-// --- UNCOMMENT FOR STRICT LOCAL DEVELOPMENT ---
+// ---  ---
 app.use(cors({
     origin: ['http://localhost:5173', 'http://localhost:5174'], // Allow your Vite frontend to connect
     credentials: true                // Required for sending/receiving cookies and tokens
