@@ -20,8 +20,20 @@ const app = express();
 const httpServer = http.createServer(app);
 
 // Initialize web  Socket.io server , to manage event like user connection, disconnetion 
+/* 
+// --- UNCOMMENT FOR STRICT LOCAL DEVELOPMENT ---
 const io = new Server(httpServer, {
     cors: { origin:  ['http://localhost:5173', 'http://localhost:5174']  } // allow frontend to talk with backend from any origin any where 3000 or 8000 port
+});
+*/
+
+const io = new Server(httpServer, {
+    cors: { 
+        origin: function (origin, callback) {
+            callback(null, origin || true);
+        },
+        credentials: true
+    }
 });
 
 // Middleware to make 'io' available in all your controllers via 'req.io'
@@ -50,8 +62,18 @@ io.on('connection', (socket) => {
 });
 
 // Enable CORS for Express API routes
+/*
+// --- UNCOMMENT FOR STRICT LOCAL DEVELOPMENT ---
 app.use(cors({
     origin: ['http://localhost:5173', 'http://localhost:5174'], // Allow your Vite frontend to connect
+    credentials: true                // Required for sending/receiving cookies and tokens
+}));
+*/
+
+app.use(cors({
+    origin: function (origin, callback) {
+        callback(null, origin || true); // Dynamically allow the Vercel origins
+    },
     credentials: true                // Required for sending/receiving cookies and tokens
 }));
 
