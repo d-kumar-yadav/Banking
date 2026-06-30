@@ -49,7 +49,7 @@ const Profile = () => {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 h-full flex flex-col">
       <div className="flex flex-col gap-1 mb-4">
         <h2 className="text-2xl font-semibold text-slate-500 flex items-center gap-2">
-          Welcome back <span className="text-2xl origin-bottom-right hover:rotate-12 transition-transform cursor-default">ðŸ‘‹</span>
+          Welcome back <span className="text-2xl origin-bottom-right hover:rotate-12 transition-transform cursor-default">👋</span>
         </h2>
         <h1 className="text-5xl font-black tracking-tight text-slate-800 space-x-8">
           <span className="bg-gradient-to-r from-[#5B0A1C] to-rose-600 bg-clip-text text-transparent">
