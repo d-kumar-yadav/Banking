@@ -21,19 +21,18 @@ const CreditSimulator = () => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
 
-  const token =
-    localStorage.getItem("token") || cookieStore?.get?.("token")?.value;
+ 
 
   const handleSimulate = async (e) => {
      e.preventDefault();
     try {
       setLoading(true);
       const payload = { ...simulationData };
-      const config = { headers: { Authorization: `Bearer ${token}` } };
+    
       const res = await axios.post(
         "/api/ml/simulate-credit",
-        payload,
-        config
+        payload
+        
       );
       if (res.data.success) {
         setResult(res.data.data);
