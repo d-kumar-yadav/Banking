@@ -41,7 +41,7 @@ const SuperadminLogin = ({ setislogin_superadmin }) => {
             </Link>
           </div>
           <div className="text-center mt-2">
-            <a href="http://localhost:5173" className="inline-flex items-center text-sm font-medium text-slate-400 hover:text-[#5B0A1C] transition-colors duration-200 group">
+            <a href="https://mybank-106.vercel.app" className="inline-flex items-center text-sm font-medium text-slate-400 hover:text-[#5B0A1C] transition-colors duration-200 group">
               <span className="mr-1 group-hover:-translate-x-1 transition-transform">&larr;</span> Back to Customer Website
             </a>
           </div>
