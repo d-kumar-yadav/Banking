@@ -28,7 +28,8 @@ exports.simulateCreditScore = async (req, res) => {
         };
 
    
-        const baseUrl = process.env.FASTAPI_URL || process.env.ML_SERVICE_URL || 'http://localhost:8000';
+        let baseUrl = process.env.FASTAPI_URL || process.env.ML_SERVICE_URL || 'http://localhost:8000';
+        baseUrl = baseUrl.replace(/\/+$/, ''); // Remove trailing slashes
         const response = await axios.post(`${baseUrl}/simulate`, simulationData);
 
     
@@ -42,6 +43,7 @@ exports.simulateCreditScore = async (req, res) => {
         });
 
     } catch (error) {
-        return res.status(500).json({ success: false, message: error.message });
+        console.error("ML Service Error:", error.response ? error.response.data : error.message);
+        return res.status(500).json({ success: false, message: error.response ? error.response.data.detail || error.message : error.message });
     }
 };
