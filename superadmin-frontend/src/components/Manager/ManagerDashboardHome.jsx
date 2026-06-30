@@ -23,10 +23,10 @@ const ManagerDashboardHome = () => {
     const fetchStats = async () => {
       try {
         //         const results = await Promise.all([
-        //    axios.get('http://localhost:4000/api/accounts/Manager/pending-accounts'),
-        //    axios.get('http://localhost:4000/api/loan/Manager/review', { withCredentials: true }),
-        //    axios.get('http://localhost:4000/api/loan/Manager/all', { withCredentials: true }),
-        //    axios.get('http://localhost:4000/api/employee/branch/balance', { withCredentials: true })
+        //    axios.get('/api/accounts/Manager/pending-accounts'),
+        //    axios.get('/api/loan/Manager/review', { withCredentials: true }),
+        //    axios.get('/api/loan/Manager/all', { withCredentials: true }),
+        //    axios.get('/api/employee/branch/balance', { withCredentials: true })
         // ]);
         
         // setStats({
@@ -37,10 +37,10 @@ const ManagerDashboardHome = () => {
         //   branchBalance: results[3].data.branchBalance || 0,
         // });
         const results = await Promise.allSettled([
-           axios.get('http://localhost:4000/api/accounts/Manager/pending-accounts'),
-           axios.get('http://localhost:4000/api/loan/Manager/review', { withCredentials: true }),
-           axios.get('http://localhost:4000/api/loan/Manager/all', { withCredentials: true }),
-           axios.get('http://localhost:4000/api/employee/branch/balance', { withCredentials: true })
+           axios.get('/api/accounts/Manager/pending-accounts'),
+           axios.get('/api/loan/Manager/review', { withCredentials: true }),
+           axios.get('/api/loan/Manager/all', { withCredentials: true }),
+           axios.get('/api/employee/branch/balance', { withCredentials: true })
         ]);
         
         setStats({

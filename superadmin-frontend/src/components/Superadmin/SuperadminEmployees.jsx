@@ -30,8 +30,8 @@ const SuperadminEmployees = () => {
   const fetchData = async () => {
     try {
       const [empRes, branchRes] = await Promise.all([
-        axios.get('http://localhost:4000/api/employee/all', { withCredentials: true }),
-        axios.get('http://localhost:4000/api/branche', { withCredentials: true })
+        axios.get('/api/employee/all', { withCredentials: true }),
+        axios.get('/api/branche', { withCredentials: true })
       ]);
       setEmployees(empRes.data.employees || []);
       setBranches(branchRes.data.branches || []);
@@ -59,7 +59,7 @@ const SuperadminEmployees = () => {
     }
     setLoading(true);
     try {
-      const response = await axios.get(`http://localhost:4000/api/employee/get_employee/${searchId.trim()}`, { withCredentials: true });
+      const response = await axios.get(`/api/employee/get_employee/${searchId.trim()}`, { withCredentials: true });
       if (response.data.success && response.data.employee) {
          setEmployees([response.data.employee]);
       } else {
@@ -77,7 +77,7 @@ const SuperadminEmployees = () => {
   const handleAddSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:4000/api/employee/add_employee', {
+      const response = await axios.post('/api/employee/add_employee', {
         name: formData.name,
         email: formData.email,
         password: formData.password,
@@ -91,7 +91,7 @@ const SuperadminEmployees = () => {
       // If branch is selected, assign it
       if (formData.branchid && response.data.employee?._id) {
          try {
-           await axios.post('http://localhost:4000/api/employee/add_to_branch', {
+           await axios.post('/api/employee/add_to_branch', {
              employeeid: response.data.employee._id,
              branchid: formData.branchid
            }, { withCredentials: true });
@@ -129,7 +129,7 @@ const SuperadminEmployees = () => {
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`http://localhost:4000/api/employee/update_employee/${selectedEmployee._id}`, {
+      await axios.put(`/api/employee/update_employee/${selectedEmployee._id}`, {
         name: formData.name,
         email: formData.email,
         phone: formData.phone,
@@ -140,7 +140,7 @@ const SuperadminEmployees = () => {
       // If branch changed, we also need to call add_to_branch to update branch side reference
       if (formData.branchid && formData.branchid !== selectedEmployee.branch?._id) {
          try {
-           await axios.post('http://localhost:4000/api/employee/add_to_branch', {
+           await axios.post('/api/employee/add_to_branch', {
              employeeid: selectedEmployee._id,
              branchid: formData.branchid
            }, { withCredentials: true });
@@ -164,7 +164,7 @@ const SuperadminEmployees = () => {
 
   const handleDeleteConfirm = async () => {
     try {
-      await axios.delete(`http://localhost:4000/api/employee/delete_employee/${selectedEmployee._id}`, { withCredentials: true });
+      await axios.delete(`/api/employee/delete_employee/${selectedEmployee._id}`, { withCredentials: true });
       toast.success('Staff deleted successfully');
       setIsDeletePopupOpen(false);
       fetchData();

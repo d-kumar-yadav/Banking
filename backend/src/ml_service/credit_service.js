@@ -28,7 +28,7 @@ exports.simulateCreditScore = async (req, res) => {
         };
 
    
-        let baseUrl = process.env.FASTAPI_URL || process.env.ML_SERVICE_URL || 'http://localhost:8000';
+        let baseUrl = process.env.FASTAPI_URL || 'http://localhost:8000';
         baseUrl = baseUrl.replace(/\/+$/, ''); // Remove trailing slashes
         const response = await axios.post(`${baseUrl}/simulate`, simulationData);
 

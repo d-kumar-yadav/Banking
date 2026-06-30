@@ -8,7 +8,7 @@ exports.defaultprobablity = async (features) =>{
 
     try{
 
-        let baseurl = process.env.FASTAPI_URL || process.env.ML_SERVICE_URL || 'http://localhost:8000';
+        let baseurl = process.env.FASTAPI_URL || 'http://localhost:8000';
         baseurl = baseurl.replace(/\/+$/, '');
         const response = await axios.post(`${baseurl}/predict_default`, features, { timeout: 30000 }); 
 

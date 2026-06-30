@@ -16,10 +16,10 @@ const ManagerAccountManager = () => {
     if (!searchQuery) return;
     setLoading(true);
     try {
-      const accRes = await axios.get(`http://localhost:4000/api/accounts/Manager/accountdetails/${searchQuery}`);
+      const accRes = await axios.get(`/api/accounts/Manager/accountdetails/${searchQuery}`);
       setAccount(accRes.data.account);
       try {
-        const txnsRes = await axios.get(`http://localhost:4000/api/accounts/Manager/flagged-transactions/${searchQuery}`);
+        const txnsRes = await axios.get(`/api/accounts/Manager/flagged-transactions/${searchQuery}`);
         setFlaggedTxns(txnsRes.data.transactions || []);
       } catch (err) {
         if (err.response?.status === 404) setFlaggedTxns([]);
@@ -38,7 +38,7 @@ const ManagerAccountManager = () => {
   const handleUnfreeze = async () => {
     try {
       const payload={accountNumber: account.accountNumber};
-      await axios.post(`http://localhost:4000/api/accounts/Manager/approve-frozen-account`, payload);
+      await axios.post(`/api/accounts/Manager/approve-frozen-account`, payload);
       toast.success('Account unfrozen successfully');
       setAccount({ ...account, status: 'Active' });
     } catch (error) { toast.error('Failed to unfreeze account'); }
@@ -61,7 +61,7 @@ const ManagerAccountManager = () => {
     
     try {
       const idempotencykey = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString();
-      await axios.post(`http://localhost:4000/api/employee/intialfund`, {
+      await axios.post(`/api/employee/intialfund`, {
         toaccount: account.accountNumber, amount: Number(fundAmount), idempotencykey
       }, { withCredentials: true });
       

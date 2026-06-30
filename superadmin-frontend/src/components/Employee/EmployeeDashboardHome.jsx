@@ -22,7 +22,7 @@ const EmployeeDashboardHome = () => {
   useEffect(() => {
     const fetchEmployeeData = async () => {
       try {
-        const response = await axios.get('http://localhost:4000/api/employee/me', { withCredentials: true });
+        const response = await axios.get('/api/employee/me', { withCredentials: true });
         setEmployeeData(response.data.employee);
       } catch (error) {
         toast.error("Failed to load employee details");

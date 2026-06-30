@@ -2,7 +2,7 @@ const axios = require('axios');
  require('dotenv').config();
 exports.getFraudScore = async (fraudFeatures) => {
 try {
-let baseUrl = process.env.FASTAPI_URL || process.env.ML_SERVICE_URL || "http://localhost:8000";  // ML service URL
+let baseUrl = process.env.FASTAPI_URL || "http://localhost:8000";  // ML service URL
 baseUrl = baseUrl.replace(/\/+$/, '');
 const response = await axios.post(
 `${baseUrl}/fraud_transaction`,

@@ -22,8 +22,8 @@ const SuperadminDashboardHome = () => {
     const fetchStats = async () => {
       try {
         const [branchesRes, employeesRes] = await Promise.all([
-          axios.get('http://localhost:4000/api/branche', { withCredentials: true }),
-          axios.get('http://localhost:4000/api/employee/all', { withCredentials: true })
+          axios.get('/api/branche', { withCredentials: true }),
+          axios.get('/api/employee/all', { withCredentials: true })
         ]);
         
         setStats({

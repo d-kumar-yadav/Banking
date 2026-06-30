@@ -16,7 +16,7 @@ const Manager_dash = ({ setislogin_manager }) => {
 
   const handleLogout = async () => {
     try {
-        const response= await axios.post('http://localhost:4000/api/employee/logout', {}, { withCredentials: true });
+        const response= await axios.post('/api/employee/logout', {}, { withCredentials: true });
         if(response.status==200){
       toast.success('Logged out successfully');
       if (setislogin_manager) setislogin_manager(false);

@@ -26,7 +26,7 @@ const SuperadminBranches = () => {
 
   const fetchBranches = async () => {
     try {
-      const response = await axios.get('http://localhost:4000/api/branche', { withCredentials: true });
+      const response = await axios.get('/api/branche', { withCredentials: true });
       setBranches(response.data.branches || []);
     } catch (error) {
       toast.error('Failed to load branches');
@@ -52,7 +52,7 @@ const SuperadminBranches = () => {
     }
     setLoading(true);
     try {
-      const response = await axios.get(`http://localhost:4000/api/branche/${searchId.trim()}`, { withCredentials: true });
+      const response = await axios.get(`/api/branche/${searchId.trim()}`, { withCredentials: true });
       if (response.data.success && response.data.branch) {
          setBranches([response.data.branch]);
       } else {
@@ -70,7 +70,7 @@ const SuperadminBranches = () => {
   const handleAddSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:4000/api/branche', formData, { withCredentials: true });
+      await axios.post('/api/branche', formData, { withCredentials: true });
       toast.success('Branch created successfully');
       setIsAddPopupOpen(false);
       setFormData({ branchName: '', branchPhone: '', branchEmail: '', address: '' });
@@ -95,7 +95,7 @@ const SuperadminBranches = () => {
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`http://localhost:4000/api/branche/${selectedBranch._id}`, formData, { withCredentials: true });
+      await axios.put(`/api/branche/${selectedBranch._id}`, formData, { withCredentials: true });
       toast.success('Branch updated successfully');
       setIsEditPopupOpen(false);
       fetchBranches();
@@ -111,7 +111,7 @@ const SuperadminBranches = () => {
 
   const handleDeleteConfirm = async () => {
     try {
-      await axios.delete(`http://localhost:4000/api/branche/${selectedBranch._id}`, { withCredentials: true });
+      await axios.delete(`/api/branche/${selectedBranch._id}`, { withCredentials: true });
       toast.success('Branch deleted successfully');
       setIsDeletePopupOpen(false);
       fetchBranches();

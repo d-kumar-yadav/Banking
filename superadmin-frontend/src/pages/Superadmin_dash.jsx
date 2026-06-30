@@ -15,7 +15,7 @@ const Superadmin_dash = ({ setislogin_superadmin }) => {
 
   const handleLogout = async () => {
     try {
-        const response= await axios.post('http://localhost:4000/api/employee/logout', {}, { withCredentials: true });
+        const response= await axios.post('/api/employee/logout', {}, { withCredentials: true });
         if(response.status==200){
       toast.success('Logged out successfully');
       if (setislogin_superadmin) setislogin_superadmin(false);

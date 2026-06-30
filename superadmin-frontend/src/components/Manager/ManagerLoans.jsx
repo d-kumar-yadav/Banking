@@ -16,8 +16,8 @@ const ManagerLoans = () => {
     try {
       setLoading(true);
       const [reviewRes, allRes] = await Promise.all([
-        axios.get('http://localhost:4000/api/loan/Manager/review', { withCredentials: true }),
-        axios.get('http://localhost:4000/api/loan/Manager/all', { withCredentials: true })
+        axios.get('/api/loan/Manager/review', { withCredentials: true }),
+        axios.get('/api/loan/Manager/all', { withCredentials: true })
       ]);
       setLoans(reviewRes.data.reviewloan || []);
       setAllLoans(allRes.data.loans || []);
@@ -32,7 +32,7 @@ const ManagerLoans = () => {
 
   const handleApprove = async (loanId) => {
     try {
-      await axios.post(`http://localhost:4000/api/loan/Manager/approve/${loanId}`, {}, { withCredentials: true });
+      await axios.post(`/api/loan/Manager/approve/${loanId}`, {}, { withCredentials: true });
       toast.success('Loan approved successfully');
       fetchLoans(); setSelectedLoan(null);
     } catch (error) { toast.error(error.response?.data?.message || 'Failed to approve loan'); }
@@ -40,7 +40,7 @@ const ManagerLoans = () => {
 
   const handleReject = async (loanId) => {
     try {
-      await axios.post(`http://localhost:4000/api/loan/Manager/reject/${loanId}`, {}, { withCredentials: true });
+      await axios.post(`/api/loan/Manager/reject/${loanId}`, {}, { withCredentials: true });
       toast.success('Loan request rejected');
       fetchLoans(); setSelectedLoan(null);
     } catch (error) { toast.error(error.response?.data?.message || 'Failed to reject loan'); }

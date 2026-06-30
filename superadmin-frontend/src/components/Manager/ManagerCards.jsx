@@ -12,7 +12,7 @@ const ManagerCards = () => {
     const fetchApplications = async () => {
         setLoading(true);
         try {
-            const res = await axios.get('http://localhost:4000/api/cards/pending', { withCredentials: true });
+            const res = await axios.get('/api/cards/pending', { withCredentials: true });
             if (res.data.success) {
                 setApplications(res.data.applications);
             }
@@ -30,7 +30,7 @@ const ManagerCards = () => {
     const handleApprove = async (id) => {
         setProcessingId(id);
         try {
-            const res = await axios.post(`http://localhost:4000/api/cards/approve/${id}`, {}, { withCredentials: true });
+            const res = await axios.post(`/api/cards/approve/${id}`, {}, { withCredentials: true });
             if (res.data.success) {
                 toast.success('Card application approved and card generated!');
                 setApplications(prev => prev.filter(app => app._id !== id));
@@ -45,7 +45,7 @@ const ManagerCards = () => {
     const handleReject = async (id) => {
         setProcessingId(id);
         try {
-            const res = await axios.post(`http://localhost:4000/api/cards/reject/${id}`, {}, { withCredentials: true });
+            const res = await axios.post(`/api/cards/reject/${id}`, {}, { withCredentials: true });
             if (res.data.success) {
                 toast.success('Card application rejected.');
                 setApplications(prev => prev.filter(app => app._id !== id));

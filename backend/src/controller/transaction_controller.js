@@ -247,7 +247,7 @@ exports.transactioncontroller = async(req,res)=>{
                 if (!bankCode) bankCode = "UNKNOWN"; // Fallback for invalid formats
 
                 // Call FastAPI Settlement
-                let baseUrl = process.env.FASTAPI_URL || process.env.ML_SERVICE_URL || "http://localhost:8000";
+                let baseUrl = process.env.FASTAPI_URL || "http://localhost:8000";
                 baseUrl = baseUrl.replace(/\/+$/, '');
                 const hubResponse = await axios.post(`${baseUrl}/central_hub_v2/settle`, {
                     amount,

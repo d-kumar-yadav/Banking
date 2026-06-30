@@ -28,7 +28,7 @@ function App() {
   useEffect(() => {
     const verifyAuth = async () => {
       try {
-        const response = await axios.get("http://localhost:4000/api/auth/verify");
+        const response = await axios.get("/api/auth/verify");
         const role = response.data.role?.toLowerCase();
         
         if (role === "manager") setislogin_manager(true);

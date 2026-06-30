@@ -12,7 +12,7 @@ const ManagerAccounts = () => {
     try {
       setLoading(true);
     
-      const res = await axios.get('http://localhost:4000/api/accounts/Manager/pending-accounts', { withCredentials: true });
+      const res = await axios.get('/api/accounts/Manager/pending-accounts', { withCredentials: true });
       setAccounts(res.data.pendingaccounts || []);
     } catch (error) {
       toast.error('Failed to fetch pending accounts');
@@ -25,7 +25,7 @@ const ManagerAccounts = () => {
 
   const handleApprove = async (userId, refNumber) => {
     try {
-      await axios.post(`http://localhost:4000/api/accounts/Manager/approve-account/${userId}/${refNumber}`, {}, { withCredentials: true });
+      await axios.post(`/api/accounts/Manager/approve-account/${userId}/${refNumber}`, {}, { withCredentials: true });
       toast.success('Account approved successfully');
       fetchAccounts(); setSelectedUser(null);
     } catch (error) { toast.error(error.response?.data?.message || 'Failed to approve account'); }
@@ -33,7 +33,7 @@ const ManagerAccounts = () => {
 
   const handleReject = async (userId, refNumber) => {
     try {
-      await axios.post(`http://localhost:4000/api/accounts/Manager/reject-account/${userId}/${refNumber}`, {}, { withCredentials: true });
+      await axios.post(`/api/accounts/Manager/reject-account/${userId}/${refNumber}`, {}, { withCredentials: true });
       toast.success('Account request rejected');
       fetchAccounts(); setSelectedUser(null);
     } catch (error) { toast.error(error.response?.data?.message || 'Failed to reject account'); }

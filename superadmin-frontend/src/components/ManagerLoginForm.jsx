@@ -19,7 +19,7 @@ const ManagerLoginForm = ({ setislogin_manager }) => {
     e.preventDefault();
     try {
       
-      const response = await axios.post("http://localhost:4000/api/employee/login", formData);
+      const response = await axios.post("/api/employee/login", formData);
      if (response.status === 200) {
         const role = response.data.role;
         

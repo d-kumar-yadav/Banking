@@ -32,7 +32,7 @@ const SuperadminFunds = () => {
 
     setAllocating(true);
     try {
-      const response = await axios.post('http://localhost:4000/api/branche/allocate-funds', {
+      const response = await axios.post('/api/branche/allocate-funds', {
         accountNumber: allocationData.accountNumber,
         amount: Number(allocationData.amount),
         idempotencykey: generateIdempotencyKey()
@@ -59,7 +59,7 @@ const SuperadminFunds = () => {
     setSearching(true);
     setHasSearched(true);
     try {
-      const response = await axios.get(`http://localhost:4000/api/branche/${accountToSearch}/transactions`, { withCredentials: true });
+      const response = await axios.get(`/api/branche/${accountToSearch}/transactions`, { withCredentials: true });
       setTransactions(response.data.transactions || []);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to fetch transactions');
