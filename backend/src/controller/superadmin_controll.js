@@ -55,8 +55,8 @@ try{
         const token = jwt.sign({id: user._id , role:user.role}, process.env.JWT_SECRET_KEY, {expiresIn: "1d"});
         return res.status(200).cookie("token", token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "lax",
+            secure: true,
+            sameSite: "none",
             maxAge: 24 * 60 * 60 * 1000 // 1 day
         }).json({
             success:true,       
