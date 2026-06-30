@@ -43,7 +43,12 @@ exports.simulateCreditScore = async (req, res) => {
         });
 
     } catch (error) {
-        console.error("ML Service Error:", error.response ? error.response.data : error.message);
-        return res.status(500).json({ success: false, message: error.response ? error.response.data.detail || error.message : error.message });
+        console.error("Credit Simulation Error:", error.message);
+        return res.status(500).json({
+            success: false,
+            message: "Credit simulation failed.",
+            errorDetail: error.message,
+            attemptedUrl: process.env.FASTAPI_URL || 'http://localhost:8000'
+        });
     }
 };
