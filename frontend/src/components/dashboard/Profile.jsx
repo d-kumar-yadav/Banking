@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import axios from '../../api/axiosInstance';
 import { User, Mail, Phone, Calendar, CreditCard, ShieldCheck, MapPin, Smile } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -128,9 +128,9 @@ const ProfileCard = ({ icon, label, value, fullWidth }) => {
       <div className={`p-3 rounded-xl bg-[#5B0A1C]/5 text-[#5B0A1C]`}>
         {icon}
       </div>
-      <div>
+      <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-slate-500">{label}</p>
-        <p className="text-lg font-semibold text-slate-800 mt-1">{value}</p>
+        <p className="text-lg font-semibold text-slate-800 mt-1 break-all">{value}</p>
       </div>
     </div>
   );
