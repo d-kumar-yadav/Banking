@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from '../../api/axiosInstance';
 import toast from 'react-hot-toast';
 import { Building, Send, AlertCircle, Calendar, CheckCircle } from 'lucide-react';
@@ -185,7 +185,7 @@ const ActiveLoans = () => {
                                     </div>
                                 </div>
 
-                                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
                                     <div className="flex items-center gap-3">
                                         <div className={`p-2 rounded-xl ${isOverdue ? 'bg-rose-100 text-rose-600' : 'bg-amber-100 text-amber-600'}`}>
                                             <Calendar className="w-5 h-5" />
@@ -197,10 +197,10 @@ const ActiveLoans = () => {
                                             </p>
                                         </div>
                                     </div>
-                                    <div className="flex gap-2">
+                                    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                                         {/* Foreclose Flow */}
                                         {precloseLoanId === loan.loan_id ? (
-                                            <div className="flex gap-2">
+                                            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                                                 <button 
                                                     onClick={() => setPrecloseLoanId(null)}
                                                     disabled={loading}
@@ -238,7 +238,7 @@ const ActiveLoans = () => {
                                             </div>
                                         ) : (
                                             // Default Buttons
-                                            <>
+                                            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                                                 <button 
                                                     onClick={() => setPrecloseLoanId(loan.loan_id)}
                                                     disabled={loading}
@@ -254,7 +254,7 @@ const ActiveLoans = () => {
                                                     <Send className="w-4 h-4" />
                                                     Pay EMI
                                                 </button>
-                                            </>
+                                            </div>
                                         )}
                                     </div>
                                 </div>
