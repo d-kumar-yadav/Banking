@@ -13,22 +13,23 @@ exports.simulateCreditScore = async (req, res) => {
             const totalcreditlimit = account ? account.totalCreditLimit : 100000;
 
         
-        const birthYear = new Date(user.date_of_birth).getFullYear();
+        const birthYear = user.date_of_birth ? new Date(user.date_of_birth).getFullYear() : 1990;
         const currentYear = new Date().getFullYear();
         const age = currentYear - birthYear;
-         const utilization= req.body.creditlimit/totalcreditlimit;
-         const debtratio=req.body.monthlyemi/(user.monthlyIncome || 1); // Avoid division by zero
+        const utilization = Number(req.body.creditlimit || 0) / totalcreditlimit;
+        const debtratio = Number(req.body.monthlyemi || 0) / (user.monthlyIncome || 1); // Avoid division by zero
     
         const simulationData = {
             utilization: utilization, // from frontend slider
-            age: age,
+            age: age || 30,
             debt_ratio: debtratio,   // from frontend slider
             income: user.monthlyIncome || 0,
-            current_score: user.creditScore // Uses the default 450 if new
+            current_score: user.creditScore || 450 // Uses the default 450 if new
         };
 
    
-        let baseUrl = process.env.FASTAPI_URL || 'http://localhost:8000';
+        let baseUrl = process.env.FASTAPI_URL || 'http://127.0.0.1:8000';
+        if (baseUrl === 'http://localhost:8000') baseUrl = 'http://127.0.0.1:8000';
         baseUrl = baseUrl.replace(/\/+$/, ''); // Remove trailing slashes
         const response = await axios.post(`${baseUrl}/simulate`, simulationData);
 

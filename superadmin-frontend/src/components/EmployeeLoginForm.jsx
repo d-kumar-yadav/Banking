@@ -23,7 +23,7 @@ const EmployeeLoginForm = ({ setislogin_employee }) => {
      if (response.status === 200) {
         const role = response.data.role;
         
-        if (role !== 'Employee') {
+        if (role == 'customer' || role =='Customer') {
           toast.error("User Doesnot exist.");
           setFormData({ email: '', password: '' });
           navigate("/Employee-login");
