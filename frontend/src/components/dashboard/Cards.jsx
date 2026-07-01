@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CreditCard, CheckCircle, ShieldCheck, Star, Plane, ShoppingBag, Clock, XCircle, AlertCircle, RefreshCw } from 'lucide-react';
 import axios from '../../api/axiosInstance';
 import toast from 'react-hot-toast';
@@ -225,10 +225,10 @@ const Cards = () => {
                     {activeTab === 'apply' && (
                         <div className="space-y-8">
                             {accounts.length > 0 && (
-                                <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl flex items-center justify-between mb-8 max-w-xl mx-auto">
-                                    <span className="font-semibold text-slate-700">Link card to account:</span>
+                                <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 max-w-xl mx-auto overflow-hidden">
+                                    <span className="font-semibold text-slate-700 whitespace-nowrap">Link card to account:</span>
                                     <select 
-                                        className="bg-white border border-slate-300 rounded-lg px-4 py-2 font-medium text-slate-700 outline-none focus:border-[#5B0A1C]"
+                                        className="w-full sm:flex-1 bg-white border border-slate-300 rounded-lg px-4 py-2 font-medium text-slate-700 outline-none focus:border-[#5B0A1C] text-ellipsis overflow-hidden"
                                         value={selectedAccountId}
                                         onChange={(e) => setSelectedAccountId(e.target.value)}
                                     >

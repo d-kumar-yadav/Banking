@@ -106,7 +106,7 @@ const Manager_dash = ({ setislogin_manager }) => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden w-full">
         {/* Header */}
-        <header className="h-16 flex items-center justify-between px-4 lg:px-8 z-10 sticky top-0 bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm">
+        <header className="h-16 flex items-center justify-between px-4 lg:px-8 z-40 sticky top-0 bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm">
           <div className="flex items-center gap-3">
             <button className="lg:hidden p-2 -ml-2 text-slate-600 hover:bg-slate-100 rounded-md" onClick={() => setIsSidebarOpen(true)}>
               <Menu size={24} />
@@ -123,7 +123,7 @@ const Manager_dash = ({ setislogin_manager }) => {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-x-hidden overflow-y-auto p-8 z-10">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto p-8 relative">
           <Routes>
             <Route path="/" element={<ManagerDashboardHome />} />
             <Route path="/accounts" element={<ManagerAccounts />} />

@@ -30,7 +30,7 @@ const CreditSimulator = () => {
       const payload = { ...simulationData };
     
       const res = await axios.post(
-        "/api/ml/simulate-credit",
+        "/api/ml/simulate",
         payload
         
       );

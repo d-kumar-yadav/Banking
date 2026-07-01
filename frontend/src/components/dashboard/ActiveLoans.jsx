@@ -109,10 +109,10 @@ const ActiveLoans = () => {
             </div>
 
             {accounts.length > 0 && loans.length > 0 && (
-                <div className="bg-white/60 backdrop-blur-sm p-4 rounded-2xl border border-slate-200 flex items-center gap-4">
-                    <span className="text-sm font-bold text-slate-700">Pay from Account:</span>
+                <div className="bg-white/60 backdrop-blur-sm p-4 rounded-2xl border border-slate-200 flex flex-col sm:flex-row sm:items-center gap-4 overflow-hidden">
+                    <span className="text-sm font-bold text-slate-700 whitespace-nowrap">Pay from Account:</span>
                     <select 
-                        className="flex-1 p-3 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-[#5B0A1C]/20 outline-none font-mono"
+                        className="w-full sm:flex-1 p-3 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-[#5B0A1C]/20 outline-none font-mono text-ellipsis overflow-hidden"
                         value={selectedAccount}
                         onChange={(e) => setSelectedAccount(e.target.value)}
                     >
