@@ -636,7 +636,7 @@ exports.deleteEmployee = async (req,res) =>{
 // Get own employee info
 exports.getMe = async (req, res) => {
     try {
-        const employee = await employeeModel.findById(req.user._id).select("-password").populate("branch");
+        const employee = await employeeModel.findById(req.user._id).select("-password +phone").populate("branch");
         if (!employee) {
             return res.status(404).json({
                 success: false,
@@ -653,6 +653,49 @@ exports.getMe = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: "Failed to retrieve employee data"
+        });
+    }
+}
+
+// Update employee password
+exports.updateEmployeePassword = async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({
+                success: false,
+                message: "Please provide both current and new passwords"
+            });
+        }
+        if (newPassword.length < 6) {
+            return res.status(400).json({
+                success: false,
+                message: "New password must be at least 6 characters long"
+            });
+        }
+
+        const employee = await employeeModel.findById(req.user._id).select("+password");
+        if (!employee) {
+            return res.status(404).json({ success: false, message: "Employee not found" });
+        }
+
+        const isMatch = await employee.comparePassword(currentPassword);
+        if (!isMatch) {
+            return res.status(400).json({ success: false, message: "Invalid current password" });
+        }
+
+        employee.password = newPassword;
+        await employee.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Password updated successfully"
+        });
+    } catch (err) {
+        console.error("Error in updateEmployeePassword:", err);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to update password due to server error"
         });
     }
 }

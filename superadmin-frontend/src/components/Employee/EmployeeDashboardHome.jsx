@@ -90,9 +90,9 @@ const EmployeeDashboardHome = () => {
           </h2>
           {employeeData.branch ? (
             <div className="grid grid-cols-1 gap-4">
-              <InfoCard icon={Building2} label="Branch Name" value={employeeData.branch.branch_name} highlight={true} />
-              <InfoCard icon={Hash} label="Branch Code" value={employeeData.branch.branch_code} />
-              <InfoCard icon={MapPin} label="Location" value={`${employeeData.branch.city}, ${employeeData.branch.state} ${employeeData.branch.pincode}`} />
+              <InfoCard icon={Building2} label="Branch Name" value={employeeData.branch.branchName} highlight={true} />
+              <InfoCard icon={Hash} label="Branch Code" value={employeeData.branch.branchCode} />
+              <InfoCard icon={Phone} label="Branch Phone" value={employeeData.branch.branchPhone} />
               <div className="p-4 rounded-xl bg-zinc-50 border border-zinc-100 col-span-1">
                  <p className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-1">Full Address</p>
                  <p className="text-zinc-800 font-medium leading-relaxed">{employeeData.branch.address}</p>
