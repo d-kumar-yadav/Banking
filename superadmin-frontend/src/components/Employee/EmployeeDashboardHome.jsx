@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../../api/axiosInstance';
 import toast from 'react-hot-toast';
-import { User, Building2, Phone, Mail, MapPin, Hash, Briefcase, Calendar } from 'lucide-react';
+import { User, Building2, Phone, Mail, MapPin, Hash, Briefcase, Calendar, Lock, X } from 'lucide-react';
 
 const InfoCard = ({ icon: Icon, label, value, highlight }) => (
   <div className={`p-4 rounded-xl flex items-start space-x-4 border ${highlight ? 'bg-violet-50 border-violet-100' : 'bg-white border-zinc-100 shadow-sm'}`}>
@@ -18,6 +18,9 @@ const InfoCard = ({ icon: Icon, label, value, highlight }) => (
 const EmployeeDashboardHome = () => {
   const [employeeData, setEmployeeData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '' });
+  const [passwordLoading, setPasswordLoading] = useState(false);
 
   useEffect(() => {
     const fetchEmployeeData = async () => {
@@ -32,6 +35,26 @@ const EmployeeDashboardHome = () => {
     };
     fetchEmployeeData();
   }, []);
+
+  const handleUpdatePassword = async (e) => {
+    e.preventDefault();
+    if (passwordForm.newPassword.length < 6) {
+      return toast.error("New password must be at least 6 characters long");
+    }
+    try {
+      setPasswordLoading(true);
+      const res = await axios.put('/api/employee/update-password', passwordForm, { withCredentials: true });
+      if (res.data.success) {
+        toast.success(res.data.message || "Password updated successfully");
+        setShowPasswordModal(false);
+        setPasswordForm({ currentPassword: '', newPassword: '' });
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to update password");
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
 
   if (loading) return (
     <div className="flex h-full items-center justify-center">
@@ -80,6 +103,15 @@ const EmployeeDashboardHome = () => {
             <InfoCard icon={Briefcase} label="Role" value={employeeData.role} />
             <InfoCard icon={Calendar} label="Joined On" value={new Date(employeeData.createdAt).toLocaleDateString()} />
           </div>
+          <div className="mt-6 pt-6 border-t border-zinc-100 flex justify-end">
+            <button 
+              onClick={() => setShowPasswordModal(true)}
+              className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white text-sm font-medium rounded-xl flex items-center transition-colors"
+            >
+              <Lock size={16} className="mr-2" />
+              Update Password
+            </button>
+          </div>
         </div>
 
         {/* Assigned Branch Details */}
@@ -107,6 +139,62 @@ const EmployeeDashboardHome = () => {
         </div>
       </div>
       
+      {showPasswordModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-zinc-900 flex items-center">
+                <Lock className="mr-2 text-violet-600" size={24} />
+                Update Password
+              </h3>
+              <button onClick={() => setShowPasswordModal(false)} className="text-zinc-400 hover:text-zinc-700 transition-colors">
+                <X size={24} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleUpdatePassword} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-zinc-700 mb-1">Current Password</label>
+                <input 
+                  type="password" 
+                  className="w-full px-4 py-2 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-violet-500 outline-none transition-all"
+                  placeholder="Enter current password"
+                  required
+                  value={passwordForm.currentPassword}
+                  onChange={(e) => setPasswordForm({...passwordForm, currentPassword: e.target.value})}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-zinc-700 mb-1">New Password</label>
+                <input 
+                  type="password" 
+                  className="w-full px-4 py-2 border border-zinc-300 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-violet-500 outline-none transition-all"
+                  placeholder="Enter new password (min 6 characters)"
+                  required
+                  value={passwordForm.newPassword}
+                  onChange={(e) => setPasswordForm({...passwordForm, newPassword: e.target.value})}
+                />
+              </div>
+              <div className="pt-4 flex justify-end space-x-3">
+                <button 
+                  type="button" 
+                  onClick={() => setShowPasswordModal(false)}
+                  className="px-4 py-2 text-zinc-600 font-medium hover:bg-zinc-100 rounded-xl transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={passwordLoading}
+                  className="px-6 py-2 bg-violet-600 hover:bg-violet-700 text-white font-medium rounded-xl transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                  {passwordLoading ? 'Updating...' : 'Save Password'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

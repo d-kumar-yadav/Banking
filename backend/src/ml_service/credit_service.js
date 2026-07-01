@@ -15,16 +15,21 @@ exports.simulateCreditScore = async (req, res) => {
         
         const birthYear = user.date_of_birth ? new Date(user.date_of_birth).getFullYear() : 1990;
         const currentYear = new Date().getFullYear();
-        const age = currentYear - birthYear;
-        const utilization = Number(req.body.creditlimit || 0) / totalcreditlimit;
-        const debtratio = Number(req.body.monthlyemi || 0) / (user.monthlyIncome || 1); // Avoid division by zero
+        let age = currentYear - birthYear;
+        if (isNaN(age)) age = 30;
+
+        let utilization = Number(req.body.creditlimit || 0) / (totalcreditlimit || 100000);
+        if (isNaN(utilization) || !isFinite(utilization)) utilization = 0;
+
+        let debtratio = Number(req.body.monthlyemi || 0) / (user.monthlyIncome || 1); 
+        if (isNaN(debtratio) || !isFinite(debtratio)) debtratio = 0;
     
         const simulationData = {
             utilization: utilization, // from frontend slider
-            age: age || 30,
+            age: age,
             debt_ratio: debtratio,   // from frontend slider
-            income: user.monthlyIncome || 0,
-            current_score: user.creditScore || 450 // Uses the default 450 if new
+            income: Number(user.monthlyIncome) || 0,
+            current_score: Number(user.creditScore) || 450 // Uses the default 450 if new
         };
 
    
