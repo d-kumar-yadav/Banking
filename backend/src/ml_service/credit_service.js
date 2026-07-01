@@ -4,6 +4,7 @@ require('dotenv').config();
 const accountmodel = require('../models/account_model');
 
 exports.simulateCreditScore = async (req, res) => {
+    let simulationData = {};
     try {
         // select beacuse i have set false
         const user = await usermodel.findById(req.user._id)
@@ -24,12 +25,12 @@ exports.simulateCreditScore = async (req, res) => {
         let debtratio = Number(req.body.monthlyemi || 0) / (user.monthlyIncome || 1); 
         if (isNaN(debtratio) || !isFinite(debtratio)) debtratio = 0;
     
-        const simulationData = {
+        simulationData = {
             utilization: utilization, // from frontend slider
-            age: age,
+            age: Math.round(age),
             debt_ratio: debtratio,   // from frontend slider
             income: Number(user.monthlyIncome) || 0,
-            current_score: Number(user.creditScore) || 450 // Uses the default 450 if new
+            current_score: Math.round(Number(user.creditScore)) || 450 // Uses the default 450 if new
         };
 
    
