@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import axios from "../../api/axiosInstance";
 import {
   Activity,
@@ -40,7 +40,8 @@ const CreditSimulator = () => {
       }
     } catch (err) {
       console.error(err);
-      toast.error("Simulation failed. ML service might be down.");
+      const detail = err.response?.data?.fastApiError?.detail || err.response?.data?.errorDetail || "ML service might be down.";
+      toast.error(`Simulation failed: ${JSON.stringify(detail)}`);
     } finally {
       setLoading(false);
     }

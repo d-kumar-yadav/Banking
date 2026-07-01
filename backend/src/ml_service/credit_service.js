@@ -53,7 +53,9 @@ exports.simulateCreditScore = async (req, res) => {
             success: false,
             message: "Credit simulation failed.",
             errorDetail: error.message,
-            attemptedUrl: process.env.FASTAPI_URL || 'http://localhost:8000'
+            attemptedUrl: process.env.FASTAPI_URL || 'http://localhost:8000',
+            payloadSent: simulationData,
+            fastApiError: error.response?.data
         });
     }
 };
