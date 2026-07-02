@@ -144,8 +144,8 @@ const SignupForm = ({ setislogin }) => {
           >
             <option value="" disabled>Select your gender</option>
             <option value="Male">Male</option>
-            <option value="female">Female</option>
-            <option value="other">Other</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
           </select>
           {/* Custom dropdown arrow */}
           <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-slate-400">
