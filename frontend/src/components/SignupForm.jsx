@@ -63,7 +63,7 @@ const SignupForm = ({ setislogin }) => {
         navigate('/Dashboard');
       }
     } catch (error) {
-      console.error("Signup error:", error);
+     
       toast.error(error.response?.data?.message || "Registration failed due to server error.");
     }
   };

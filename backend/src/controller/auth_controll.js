@@ -131,7 +131,7 @@ if (existingPhoneUser) {
     });
 }
 
-         
+
          
 
          // create user in  database

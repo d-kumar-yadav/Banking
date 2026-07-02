@@ -26,6 +26,10 @@ exports.transactioncontroller = async(req,res)=>{
         }       
 
         // validate transfer limits
+
+        if(fromaccount === toaccount){
+            return res.status(400).json({ success: false, message: "From and To account numbers cannot be the same." });
+        }
         if (transferType === "Normal") {
             if (amount >= 100000) {
                 return res.status(400).json({ success: false, message: "Normal transfer limit is strictly less than 1,00,000 INR." });
