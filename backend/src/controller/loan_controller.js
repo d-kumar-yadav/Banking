@@ -144,8 +144,8 @@ exports.loanHistoryController= async (req, res) =>{
 // admin can see all the loan under review
 exports.adminLoanReviewController= async (req, res) =>{
     try{
-         const role = req.user.role 
-         if(role !== "Manager" && role !== "Superadmin") {
+         const role = req.user.role ? req.user.role.toLowerCase() : "";
+         if(role !== "manager" && role !== "superadmin") {
              return res.status(403).json({
                 success:false,
                 message: "Unauthorized: Manager access required"
